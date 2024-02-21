@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Meu Projeto Django{% endblock %}</title>
+    {% block extra_css %}
+    <link href="{% static 'src/output.css' %}" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.css"  rel="stylesheet" />
+    <!-- Aqui você pode adicionar links para CSS externos ou blocos de estilo -->
+    {% endblock %}
+</head>
+<body>
+    <header>
+        <!-- Aqui você pode adicionar o cabeçalho do seu site -->
+    </header>
+
+    <nav>
+        {% include "includes/nav.html" %}
+    </nav>
+
+    <main class="m-4">
+        {% block content %}
+        <!-- O conteúdo principal do seu site será inserido aqui -->
+        {% endblock %}
+    </main>
+
+    {% include "includes/footer.html" %}
+
+    {% block extra_js %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
+
+    {% endblock %}
+</body>
+</html>
