@@ -79,12 +79,23 @@
         <!-- Botões de categorias -->
         <div class="mb-3 mr-2">
             <div class="flex">
-                <button type="button" class="bg-gray-200 text-gray-700 px-4 py-2 rounded focus:outline-none focus:ring focus:border-blue-300 mr-2">Livre (823)</button>
-                <button type="button" class="bg-blue-200 text-blue-700 px-4 py-2 rounded focus:outline-none focus:ring focus:border-blue-300 mr-2">Reservado (135)</button>
-                <button type="button" class="bg-green-200 text-green-700 px-4 py-2 rounded focus:outline-none focus:ring focus:border-green-300">Pago (42)</button>
+                <!-- Botão para números disponíveis -->
+                <button type="button" class="bg-gray-200 text-gray-700 px-4 py-2 rounded focus:outline-none focus:ring focus:border-blue-300 mr-2">
+                    Livre ({{ numeros_livres }})
+                </button>
+                
+                <!-- Botão para números selecionados -->
+                <button type="button" class="bg-blue-200 text-blue-700 px-4 py-2 rounded focus:outline-none focus:ring focus:border-blue-300 mr-2">
+                    Reservado ({{ numeros_selecionados|length }})
+                </button>
+                
+                <!-- Botão para números pagos -->
+                <button type="button" class="bg-green-200 text-green-700 px-4 py-2 rounded focus:outline-none focus:ring focus:border-green-300">
+                    Pago ({{ numeros_pagos|length }})
+                </button>
             </div>
         </div>
-    
+        
         <!-- Botão "Ver meus números" -->
         <div class="mb-3 mr-2">
             <button type="button" class="bg-red-500 text-white px-4 py-2 rounded focus:outline-none focus:ring focus:border-red-300">Ver meus números</button>
@@ -100,12 +111,15 @@
     <!-- Renderizando a lista de números lado a lado -->
     <div class="mt-8 flex flex-wrap">
         {% for numero in numeros %}
-            <div style="margin: 5px; cursor: pointer;" 
-                class="{% if numero|stringformat:'s' in numeros_selecionados %}bg-blue-200{% else %}bg-gray-200 p-2 rounded numero{% endif %}" 
-                {% if numero|stringformat:'s' not in numeros_selecionados %}onclick="selecionarNumero(this, '{{ numero|custom_format:digitos }}')" {% endif %}>
-                {{ numero|custom_format:digitos }}
-            </div>
+            {% if numero in numeros_selecionados %}
+                <div style="margin: 5px;" class="bg-blue-200 p-2 rounded">{{ numero|custom_format:digitos }}</div>
+            {% else %}
+                <div style="margin: 5px; cursor: pointer;" class="bg-gray-200 p-2 rounded numero" onclick="selecionarNumero(this, '{{ numero|custom_format:digitos }}')">
+                    {{ numero|custom_format:digitos }}
+                </div>
+            {% endif %}
         {% endfor %}
+
     </div>
 
   
@@ -199,6 +213,7 @@
     var numerosSelecionados = [];
     var valorPorNumero = {{ sorteio.preco }}; // Defina o valor de cada número aqui
 
+    // Atualize a função selecionarNumero() para armazenar os números selecionados como uma lista de inteiros
     function selecionarNumero(element, numero) {
         var index = numerosSelecionados.indexOf(numero);
         if (element.classList.contains('bg-blue-200')) {
@@ -213,34 +228,45 @@
             element.classList.add('numero-ativo');
         }
         atualizarContainer();
-    }
-    
-    
 
+        // Atualize o campo oculto com os números selecionados como uma lista de inteiros
+        document.getElementById('numerosSelecionadosInput').value = numerosSelecionados.join(',');
+
+    }
+
+
+    
     function atualizarContainer() {
         var container = document.getElementById('popfinalizar');
         var listaNumeros = document.getElementById('selectedNumbersList');
         var textoPreco = document.getElementById('checkout_text_price');
         var valorTotalSpan = document.getElementById('valorTotalSpan');
-
+    
         listaNumeros.innerHTML = '';
         var valorTotal = 0;
-
+    
         if (numerosSelecionados.length > 0) {
-            // Se houver números selecionados, preencher o popup e exibi-lo
             numerosSelecionados.forEach(function(numero) {
                 listaNumeros.innerHTML += '<li class="raffle-ticket-number raffle-ticket-number--selected d-inline-block badge mb-1 mr-1" style="min-width:70px;">' + numero + '</li>';
                 valorTotal += valorPorNumero; // Adiciona o valor de cada número
             });
-
+    
             textoPreco.innerHTML = numerosSelecionados.length + 'x R$' + valorPorNumero.toFixed(2) + ' = R$' + valorTotal.toFixed(2);
-            valorTotalSpan.textContent = 'Total: R$' + valorTotal.toFixed(2); // Atualiza o valor total
-            container.style.display = 'block'; // Mostrar o popup
+            valorTotalSpan.textContent = 'Total: R$' + valorTotal.toFixed(2);
+            container.style.display = 'block';
+    
+            // Atualize o campo oculto com os números selecionados como uma lista de inteiros separados por vírgulas
+            document.getElementById('numerosSelecionadosInput').value = numerosSelecionados.join(',');
         } else {
-            // Se não houver números selecionados, esconder o popup
             container.style.display = 'none';
         }
+    
+        // Atualize os campos ocultos com os dados atualizados
+        document.getElementById('nomeParticipanteInput').value = document.getElementById('nomeInput').value;
+        document.getElementById('celularParticipanteInput').value = document.getElementById('celularInput').value;
     }
+    
+    
 
 
     document.getElementById('finalizarButton').addEventListener('click', function() {

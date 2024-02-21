@@ -4,6 +4,8 @@ from .models import Sorteio, ParticipacaoSorteio
 import math
 import json
 
+from django.contrib import messages
+
 def home(request):
     sorteios = Sorteio.objects.all()
     return render(request, 'index.html', {'sorteios': sorteios})
@@ -27,17 +29,40 @@ def detalhe_sorteio(request, slug):
     numeros_selecionados = set()
     for participacao in participacoes:
         numeros_selecionados.update(participacao.numeros_selecionados)
+    
+    # Calcular o número de números livres
+    numeros_livres = len(numeros) - len(numeros_selecionados)
 
     if request.method == 'POST':
         form = ParticipacaoSorteioForm(request.POST)
+
         if form.is_valid():
             participacao = form.save(commit=False)
             participacao.sorteio = sorteio
-            # Transformar os números selecionados de JSON para uma lista de inteiros
-            numeros_selecionados_form = json.loads(request.POST.get('numeros_selecionados', '[]'))
-            participacao.numeros_selecionados = numeros_selecionados_form
-            participacao.save()
-            # Redirecionar para uma página de sucesso ou similar
+
+            # Recupere os valores dos campos do formulário
+            numeros_selecionados_str = request.POST.get('numeros_selecionados', '')  # Obtenha a string de números selecionados
+            numeros_selecionados_str = numeros_selecionados_str.replace(' ', '')  # Remova espaços em branco
+            numeros_selecionados_str = numeros_selecionados_str.split(',')  # Divida a string pelos separadores de vírgula
+            
+            # Converta os números em uma lista de inteiros, ignorando os vazios
+            numeros_selecionados_int = [int(num.strip()) for num in numeros_selecionados_str if num.strip()]
+            
+            nome_participante = request.POST.get('nome_participante')
+            celular_participante = request.POST.get('celular_participante')
+
+            try:
+                participacao.numeros_selecionados = numeros_selecionados_int
+                participacao.nome_participante = nome_participante
+                participacao.celular_participante = celular_participante
+                participacao.save()
+                
+                return redirect('detalhe_sorteio', slug=slug)  
+            except ValueError:
+                print("Erro na conversão dos números selecionados para inteiros")
+        else:
+            print("Erros do formulário:", form.errors)
+
     else:
         form = ParticipacaoSorteioForm()
 
@@ -46,7 +71,8 @@ def detalhe_sorteio(request, slug):
         'numeros': numeros, 
         'digitos': digitos, 
         'form': form,
-        'numeros_selecionados': numeros_selecionados
+        'numeros_selecionados': numeros_selecionados,
+        'numeros_livres': numeros_livres  # Adicionando a variável numeros_livres ao contexto do template
     })
 
 def adm(request):
