@@ -3,4 +3,4 @@ from .models import Sorteio
 
 @admin.register(Sorteio)
 class SorteioAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'preco', 'descricao', 'slug')
+    list_display = ['nome', 'preco', 'descricao', 'imagem', 'slug', 'numero']  # Adicione 'numero' aqui

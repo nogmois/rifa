@@ -8,6 +8,8 @@ class Sorteio(models.Model):
     imagem = models.ImageField(upload_to='imagens_sorteios/')
     slug = models.SlugField(unique=True, blank=True)
 
+    numero = models.IntegerField()
+
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.nome)
