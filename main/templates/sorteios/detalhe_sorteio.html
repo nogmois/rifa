@@ -3,18 +3,54 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <div class="container mx-auto mt-6">
-        <div class="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl">
-            <div class="md:flex">
-                <div class="md:shrink-0">
-                    <img class="h-48 w-full object-cover md:h-full md:w-48" src="{{ sorteio.imagem.url }}" alt="{{ sorteio.nome }}">
-                </div>
-                <div class="p-8">
-                    <div class="uppercase tracking-wide text-sm text-indigo-500 font-semibold">{{ sorteio.nome }}</div>
-                    <p class="mt-2 text-gray-500">{{ sorteio.descricao }}</p>
-                    <div class="mt-4 text-gray-600 font-bold">R$ {{ sorteio.preco }}</div>
-                </div>
+
+<div class="container max-w-3xl mx-auto mt-6 px-8">
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        <!-- Contêiner flexível para imagem e conteúdo -->
+        <div class="flex">
+            <!-- Bloco da imagem com tamanho aumentado -->
+            <div class="w-1/2">
+                <img class="w-full h-full object-cover" src="{{ sorteio.imagem.url }}" alt="{{ sorteio.nome }}">
+            </div>
+
+            <!-- Bloco do texto -->
+            <div class="w-1/2 p-8">
+                <div class="uppercase tracking-wide text-sm text-indigo-500 font-semibold">{{ sorteio.nome }}</div>
+                <p class="mt-2 text-gray-500">{{ sorteio.descricao }}</p>
+                <div class="mt-4 text-gray-600 font-bold">R$ {{ sorteio.preco }}</div>
             </div>
         </div>
     </div>
+
+    <!-- Seção de Cotas -->
+    <div class="mt-8">
+        <h2 class="text-2xl font-bold">Cotas</h2>
+        <p class="mt-2">Clique e selecione quantas cotas você quiser!</p>
+    </div>
+
+    <div class="mt-8 flex flex-wrap">
+        <!-- Botões de categorias -->
+        <div class="mb-3 mr-2">
+            <div class="flex">
+                <button type="button" class="bg-gray-200 text-gray-700 px-4 py-2 rounded focus:outline-none focus:ring focus:border-blue-300 mr-2">Livre (823)</button>
+                <button type="button" class="bg-blue-200 text-blue-700 px-4 py-2 rounded focus:outline-none focus:ring focus:border-blue-300 mr-2">Reservado (135)</button>
+                <button type="button" class="bg-green-200 text-green-700 px-4 py-2 rounded focus:outline-none focus:ring focus:border-green-300">Pago (42)</button>
+            </div>
+        </div>
+    
+        <!-- Botão "Ver meus números" -->
+        <div class="mb-3 mr-2">
+            <button type="button" class="bg-red-500 text-white px-4 py-2 rounded focus:outline-none focus:ring focus:border-red-300">Ver meus números</button>
+        </div>
+    
+        <!-- Botão "Mostrar todos" -->
+        <div class="mb-3">
+            <button type="button" class="text-gray-700 underline px-4 py-2 focus:outline-none focus:ring focus:border-gray-300">Mostrar todos</button>
+        </div>
+    </div>
+    
+</div>
+
+
+
 {% endblock content %}
