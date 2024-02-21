@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.text import slugify
+from django.contrib.postgres.fields import ArrayField
 
 class Sorteio(models.Model):
     nome = models.CharField(max_length=200)
@@ -10,6 +11,9 @@ class Sorteio(models.Model):
 
     numero = models.IntegerField()
 
+    participacoes = models.ManyToManyField('ParticipacaoSorteio', related_name='sorteios')
+
+
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.nome)
@@ -17,3 +21,14 @@ class Sorteio(models.Model):
 
     def __str__(self):
         return self.nome
+
+
+class ParticipacaoSorteio(models.Model):
+    sorteio = models.ForeignKey(Sorteio, on_delete=models.CASCADE)
+    nome_participante = models.CharField(max_length=200)
+    celular_participante = models.CharField(max_length=20)
+    numeros_selecionados = ArrayField(models.IntegerField())
+
+    def __str__(self):
+        return f"Participação de {self.nome_participante} no sorteio {self.sorteio.nome}"
+

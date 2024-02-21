@@ -100,7 +100,9 @@
     <!-- Renderizando a lista de números lado a lado -->
     <div class="mt-8 flex flex-wrap">
         {% for numero in numeros %}
-            <div style="margin: 5px; cursor: pointer;" class="bg-gray-200 p-2 rounded numero" onclick="selecionarNumero(this, {{ numero|custom_format:digitos }})">
+            <div style="margin: 5px; cursor: pointer;" 
+                class="{% if numero|stringformat:'s' in numeros_selecionados %}bg-blue-200{% else %}bg-gray-200 p-2 rounded numero{% endif %}" 
+                {% if numero|stringformat:'s' not in numeros_selecionados %}onclick="selecionarNumero(this, '{{ numero|custom_format:digitos }}')" {% endif %}>
                 {{ numero|custom_format:digitos }}
             </div>
         {% endfor %}
@@ -124,23 +126,37 @@
                       <span class="sr-only">Close modal</span>
                   </button>
               </div>
+
               <!-- Modal body -->
-              <!-- Modal body -->
-                <div class="p-4 md:p-5 space-y-4">
-                    <p  class="text-base leading-relaxed text-black dark:text-gray-400">
-                        Pagamento referente à participação na ação entre amigos <span style="font-weight: bold; text-transform: uppercase;">{{ sorteio.nome }}</span>
-
+              <div class="p-4 md:p-5 space-y-4">
+                <form method="post" action="{% url 'detalhe_sorteio' sorteio.slug %}">
+                    {% csrf_token %}
+                    <p class="text-base leading-relaxed text-black dark:text-gray-400">
+                        Pagamento referente à participação na rifa <span style="font-weight: bold; text-transform: uppercase;">{{ sorteio.nome }}</span>
                     </p>
-                    <p id="numerosSelecionadosText" class="bg-black flex flex-wrap ">
+                    <p id="numerosSelecionadosText" class="bg-black flex flex-wrap "></p>
+                    
+                    <!-- Campo oculto para armazenar os números selecionados -->
+                    <input type="hidden" name="numeros_selecionados" id="numerosSelecionadosInput">
+            
+                    <span id="valorTotalSpan" class="bg-green-100 text-green-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">Total</span>
+                    <p class="text-lg font-semibold uppercase">Dados do participante</p>
+                    
+                    <!-- Campos do formulário -->
+                    <div class="flex flex-col">
+                        <label for="nomeInput" class="text-base leading-relaxed text-black dark:text-gray-400 mb-1">Nome:</label>
+                        <input type="text" name="nome_participante" id="nomeInput" class="bg-white border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Digite seu nome">
+                    </div>
+                    <div class="flex flex-col">
+                        <label for="celularInput" class="text-base leading-relaxed text-black dark:text-gray-400 mb-1">Celular:</label>
+                        <input type="tel" name="celular_participante" id="celularInput" class="bg-white border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="(99) 99999-9999">
+                    </div>                  
+            
+                    <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">Enviar</button>
+                </form>
+            </div>
+            
 
-                    </p>
-                </div>
-
-              <!-- Modal footer -->
-              <div class="flex items-center p-4 md:p-5 border-t border-gray-200 rounded-b dark:border-gray-600">
-                  <button data-modal-hide="default-modal" type="button" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">I accept</button>
-                  <button data-modal-hide="default-modal" type="button" class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">Decline</button>
-              </div>
           </div>
       </div>
   </div>
@@ -173,13 +189,22 @@
 
     
 </div>
-
+<script>
+    document.getElementById('celularInput').addEventListener('input', function (e) {
+        var x = e.target.value.replace(/\D/g, '').match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
+        e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
+    });
+</script>
 <script>
     var numerosSelecionados = [];
-    var valorPorNumero = 200; // Defina o valor de cada número aqui
+    var valorPorNumero = {{ sorteio.preco }}; // Defina o valor de cada número aqui
 
     function selecionarNumero(element, numero) {
         var index = numerosSelecionados.indexOf(numero);
+        if (element.classList.contains('bg-blue-200')) {
+            return;
+        }
+
         if (index > -1) {
             numerosSelecionados.splice(index, 1);
             element.classList.remove('numero-ativo');
@@ -187,44 +212,44 @@
             numerosSelecionados.push(numero);
             element.classList.add('numero-ativo');
         }
-        atualizarContainer(); // Atualiza o estado do popup com base nos números selecionados
+        atualizarContainer();
     }
     
+    
+
     function atualizarContainer() {
         var container = document.getElementById('popfinalizar');
         var listaNumeros = document.getElementById('selectedNumbersList');
-        
         var textoPreco = document.getElementById('checkout_text_price');
+        var valorTotalSpan = document.getElementById('valorTotalSpan');
+
         listaNumeros.innerHTML = '';
         var valorTotal = 0;
-    
+
         if (numerosSelecionados.length > 0) {
             // Se houver números selecionados, preencher o popup e exibi-lo
             numerosSelecionados.forEach(function(numero) {
                 listaNumeros.innerHTML += '<li class="raffle-ticket-number raffle-ticket-number--selected d-inline-block badge mb-1 mr-1" style="min-width:70px;">' + numero + '</li>';
                 valorTotal += valorPorNumero; // Adiciona o valor de cada número
             });
-    
+
             textoPreco.innerHTML = numerosSelecionados.length + 'x R$' + valorPorNumero.toFixed(2) + ' = R$' + valorTotal.toFixed(2);
+            valorTotalSpan.textContent = 'Total: R$' + valorTotal.toFixed(2); // Atualiza o valor total
             container.style.display = 'block'; // Mostrar o popup
         } else {
             // Se não houver números selecionados, esconder o popup
             container.style.display = 'none';
         }
     }
-</script>
 
-
-{% comment %} adiciona os numeros no modal {% endcomment %}
-<script>
 
     document.getElementById('finalizarButton').addEventListener('click', function() {
         // Obtenha uma referência ao elemento do parágrafo dentro do modal
         var numerosSelecionadosContainer = document.getElementById('numerosSelecionadosText');
-    
+
         // Limpe qualquer conteúdo existente dentro do container
         numerosSelecionadosContainer.innerHTML = '';
-    
+
         // Verifique se há números selecionados
         if (numerosSelecionados.length > 0) {
             // Para cada número selecionado, crie um elemento <p> com fundo individual e adicione-o ao container
@@ -242,9 +267,7 @@
             numerosSelecionadosContainer.appendChild(p);
         }
     });
-    
 </script>
-
 
 
 {% endblock content %}
