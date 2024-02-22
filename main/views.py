@@ -52,6 +52,8 @@ def detalhe_sorteio(request, slug):
     # Calcular o número de números livres
     numeros_livres = len(numeros) - len(numeros_selecionados)
 
+    mostrar_popup_modal = 'verify-number' in request.GET
+
     if request.method == 'POST':
         form = ParticipacaoSorteioForm(request.POST)
 
@@ -93,6 +95,9 @@ def detalhe_sorteio(request, slug):
         'numeros_selecionados': numeros_selecionados,
         'numeros_livres': numeros_livres,  # Adicionando a variável numeros_livres ao contexto do template
         'numeros_reservados_info': numeros_reservados_info,
+
+        'mostrar_popup_modal': mostrar_popup_modal,
+        'numeros_para_modal': json.dumps(list(numeros_selecionados)),
     })
 
 def adm(request):
