@@ -33,6 +33,8 @@ class ParticipacaoSorteio(models.Model):
 
     data_criacao = models.DateTimeField(default=timezone.now)  # Campo para armazenar a data/hora de criação
 
+    paga = models.BooleanField(default=False)
+
     def __str__(self):
         return f"Participação de {self.nome_participante} no sorteio {self.sorteio.nome}"
 

@@ -132,7 +132,7 @@
                 <!-- Botão para números selecionados -->
                 
                 <button type="button" id="mostrarReservados" class="bg-blue-200 text-blue-700 px-4 py-2 rounded focus:outline-none focus:ring focus:border-blue-300 mr-2">
-                    Reservado ({{ numeros_selecionados|length }})
+                    Reservado ({{ quanti_numeros_selecionados }})
                 </button>
 
                 
@@ -160,7 +160,12 @@
     <!-- Renderizando a lista de números lado a lado -->
     <div class="mt-8 flex flex-wrap">
         {% for numero in numeros %}
-            {% if numero in numeros_selecionados %}
+            {% if numero in numeros_pagos %}
+                <!-- Número pago -->
+                <div style="margin: 5px; position: relative;" class="bg-green-200 p-2 rounded numero-pago">{{ numero|custom_format:digitos }}
+                    <span class="tooltip-text">Número {{ numero }} pago</span>
+                </div>
+            {% elif numero in numeros_selecionados %}
                 <div style="margin: 5px; position: relative;" class="bg-blue-200 p-2 rounded numero-reservado">{{ numero|custom_format:digitos }}
                     <span class="tooltip-text">Número {{ numero }} reservado <br> por <span style="color: yellow;" >{{ numeros_reservados_info|get_item:numero }}</span></span>
                 </div>
@@ -228,18 +233,27 @@
                     <svg class="mx-auto mb-4 text-gray-400 w-12 h-12 dark:text-gray-200" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 11V6m0 8h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                     </svg>
-                    <h3 class="mb-2 text-lg font-normal text-gray-500 dark:text-gray-400">Atenção você ainda não pagou por esses numeros</h3>
-                    <br>
-                    {% for participacao in participacoes %}
-                        <div>
-                            Participação de {{ participacao.nome_participante }}: <span id="contador-{{ participacao.id }}"></span>
-                        </div>
-                    {% endfor %}
-                    <br>
-                    <p id="numerosSelecionadosParaExibir" class="mb-5 text-lg font-normal "></p>
-                    <button data-modal-hide="popup-modal" type="button" class="text-white bg-green-600 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center">
-                        Comprar agora
-                    </button>
+                    <form method="post" action="{% url 'detalhe_sorteio' slug=sorteio.slug %}">
+                        {% csrf_token %}
+                        <h3 class="mb-2 text-lg font-normal text-gray-500 dark:text-gray-400">Atenção você ainda não pagou por esses numeros</h3>
+                        <br>
+                        {% for participacao in participacoes %}
+                            {% if not participacao.paga %}
+                                <div>
+                                    Participação de {{ participacao.nome_participante }}: <span id="contador-{{ participacao.id }}"></span>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                        <br>
+                        <p id="numerosSelecionadosParaExibir" class="mb-5 text-lg font-normal "></p>
+                        
+                        <input type="hidden" name="form_type" value="pagamento">
+                        <input type="hidden" name="numeros_pagos" id="inputNumerosPagos" value="">
+                        
+                        <button data-modal-hide="popup-modal" type="submit" class="text-white bg-green-600 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center">
+                            Comprar agora
+                        </button>
+                    </form>
                     <a href="{% url "home" %}" data-modal-hide="popup-modal" type="button" class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
                         Sair
                     </a>
@@ -279,6 +293,8 @@
                     <!-- Campo oculto para armazenar os números selecionados -->
                     <input type="hidden" name="numeros_selecionados" id="numerosSelecionadosInput">
             
+                    <input type="hidden" name="form_type" value="participacao">
+
                     <span id="valorTotalSpan" class="bg-green-100 text-green-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">Total</span>
                     <p class="text-lg font-semibold uppercase">Dados do participante</p>
                     
@@ -330,6 +346,17 @@
     
 </div>
 
+{% comment %} Script para confirmar pagamento {% endcomment %}
+<script>
+    function atualizarInputNumerosPagos() {
+        document.getElementById('inputNumerosPagos').value = numerosSelecionados.join(',');
+    }
+
+    document.querySelector('[data-modal-hide="popup-modal"]').addEventListener('click', atualizarInputNumerosPagos);
+</script>
+
+
+
 {% comment %} Contador de tempo limite {% endcomment %}
 <script>
     var horasLimites = {{ horas_limites|safe }};
@@ -361,9 +388,6 @@
 
 
 
-
-
-    
 {% comment %} Faz abrir o modal de pagento {% endcomment %}
 <script>
     window.onload = function() {
@@ -371,6 +395,10 @@
             var numerosSelecionados = {{ numeros_para_modal|safe }};
             document.getElementById('numerosSelecionadosParaExibir').textContent = 'Números selecionados: ' + numerosSelecionados;
             document.getElementById('popup-modal').style.display = 'block';
+        
+            // Atualiza o valor do campo oculto com os números selecionados
+            document.getElementById('inputNumerosPagos').value = numerosSelecionados.join(',');
+        
         {% endif %}
     };
 </script>

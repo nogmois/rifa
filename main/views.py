@@ -37,7 +37,7 @@ def detalhe_sorteio(request, slug):
 
     # Calcula a hora limite para exclusão (1 hora atrás)
     hora_limite_exclusao = timezone.now() - timedelta(hours=1)
-    ParticipacaoSorteio.objects.filter(sorteio=sorteio, data_criacao__lte=hora_limite_exclusao).delete()
+    ParticipacaoSorteio.objects.filter(sorteio=sorteio, data_criacao__lte=hora_limite_exclusao, paga=False).delete()
 
 
     # Calcula a hora limite para cada participação
@@ -71,40 +71,65 @@ def detalhe_sorteio(request, slug):
     # Calcular o número de números livres
     numeros_livres = len(numeros) - len(numeros_selecionados)
 
+    
+    
+
+    # Obter todos os números pagos para este sorteio
+    numeros_pagos = set()
+    participacoes_pagas = ParticipacaoSorteio.objects.filter(sorteio=sorteio, paga=True)
+    for participacao in participacoes_pagas:
+        numeros_pagos.update(participacao.numeros_selecionados)
+
     mostrar_popup_modal = 'verify-number' in request.GET
-
     if request.method == 'POST':
-        form = ParticipacaoSorteioForm(request.POST)
+        form_type = request.POST.get('form_type', '')
 
-        if form.is_valid():
-            participacao = form.save(commit=False)
-            participacao.sorteio = sorteio
+        if form_type == 'pagamento':
+            # Altera para pago no banco de dados
+            numeros_pagos_str = request.POST.get('numeros_pagos', '')
+            numeros_pagos = [int(num.strip()) for num in numeros_pagos_str.split(',') if num.strip()]
 
-            # Recupere os valores dos campos do formulário
-            numeros_selecionados_str = request.POST.get('numeros_selecionados', '')  # Obtenha a string de números selecionados
-            numeros_selecionados_str = numeros_selecionados_str.replace(' ', '')  # Remova espaços em branco
-            numeros_selecionados_str = numeros_selecionados_str.split(',')  # Divida a string pelos separadores de vírgula
             
-            # Converta os números em uma lista de inteiros, ignorando os vazios
-            numeros_selecionados_int = [int(num.strip()) for num in numeros_selecionados_str if num.strip()]
-            
-            nome_participante = request.POST.get('nome_participante')
-            celular_participante = request.POST.get('celular_participante')
-
-            try:
-                participacao.numeros_selecionados = numeros_selecionados_int
-                participacao.nome_participante = nome_participante
-                participacao.celular_participante = celular_participante
-                participacao.save()
+            for num in numeros_pagos:
+                ParticipacaoSorteio.objects.filter(sorteio=sorteio, numeros_selecionados__contains=[num]).update(paga=True)
                 
-                return redirect('detalhe_sorteio', slug=slug)  
-            except ValueError:
-                print("Erro na conversão dos números selecionados para inteiros")
-        else:
-            print("Erros do formulário:", form.errors)
+            return redirect('detalhe_sorteio', slug=slug)
+        
+        elif form_type == 'participacao':
+
+            form = ParticipacaoSorteioForm(request.POST)
+
+            if form.is_valid():
+                participacao = form.save(commit=False)
+                participacao.sorteio = sorteio
+
+                # Recupere os valores dos campos do formulário
+                numeros_selecionados_str = request.POST.get('numeros_selecionados', '')  # Obtenha a string de números selecionados
+                numeros_selecionados_str = numeros_selecionados_str.replace(' ', '')  # Remova espaços em branco
+                numeros_selecionados_str = numeros_selecionados_str.split(',')  # Divida a string pelos separadores de vírgula
+                
+                # Converta os números em uma lista de inteiros, ignorando os vazios
+                numeros_selecionados_int = [int(num.strip()) for num in numeros_selecionados_str if num.strip()]
+                
+                nome_participante = request.POST.get('nome_participante')
+                celular_participante = request.POST.get('celular_participante')
+
+                try:
+                    participacao.numeros_selecionados = numeros_selecionados_int
+                    participacao.nome_participante = nome_participante
+                    participacao.celular_participante = celular_participante
+                    participacao.save()
+                    
+                    return redirect('detalhe_sorteio', slug=slug)  
+                except ValueError:
+                    print("Erro na conversão dos números selecionados para inteiros")
+            else:
+                print("Erros do formulário:", form.errors)
 
     else:
         form = ParticipacaoSorteioForm()
+
+    quanti_numeros_selecionados =  len(numeros_selecionados) - len(numeros_pagos)
 
     return render(request, 'sorteios/detalhe_sorteio.html', {
         'sorteio': sorteio, 
@@ -120,6 +145,9 @@ def detalhe_sorteio(request, slug):
 
         'horas_limites': horas_limites,
         'participacoes': participacoes, 
+
+        'numeros_pagos': numeros_pagos, 
+        'quanti_numeros_selecionados': quanti_numeros_selecionados,
     })
 
 
