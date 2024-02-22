@@ -131,6 +131,9 @@ def detalhe_sorteio(request, slug):
 
     quanti_numeros_selecionados =  len(numeros_selecionados) - len(numeros_pagos)
 
+    # Muda o icone quando o modal de pagamento aparece
+    participacoes_pagas = [participacao for participacao in participacoes if participacao.paga ]
+
     return render(request, 'sorteios/detalhe_sorteio.html', {
         'sorteio': sorteio, 
         'numeros': numeros, 
@@ -148,6 +151,8 @@ def detalhe_sorteio(request, slug):
 
         'numeros_pagos': numeros_pagos, 
         'quanti_numeros_selecionados': quanti_numeros_selecionados,
+
+        'participacoes_pagas': participacoes_pagas,
     })
 
 

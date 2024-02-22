@@ -234,17 +234,37 @@
                     <span class="sr-only">Close modal</span>
                 </button>
                 <div class="p-4 md:p-5 text-center">
-                    <svg class="mx-auto mb-4 text-gray-400 w-12 h-12 dark:text-gray-200" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 11V6m0 8h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                    </svg>
+                    
+                    {% for participacao in participacoes %}
+                        {% if participacao in participacoes_pagas %}
+                            <!-- SVG para participação paga -->
+                            <svg class="mx-auto mb-4 text-green-400 w-12 h-12 dark:text-gray-200" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            
+                            <h3 class="mb-2 text-lg font-normal text-gray-500 dark:text-gray-400">Parabens seu numero foi garantido</h3>
+                           
+                        {% else %}
+                            <!-- SVG para participação não paga -->
+                            <svg class="mx-auto mb-4 text-gray-400 w-12 h-12 dark:text-gray-200" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 11V6m0 8h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                            </svg>
+                            <h3 class="mb-2 text-lg font-normal text-gray-500 dark:text-gray-400">Atenção você ainda não pagou por esses numeros</h3>
+                            <br>
+                        {% endif %}
+                    {% endfor %}
+
+
+
+                    
                     <form method="post" action="{% url 'detalhe_sorteio' slug=sorteio.slug %}">
                         {% csrf_token %}
-                        <h3 class="mb-2 text-lg font-normal text-gray-500 dark:text-gray-400">Atenção você ainda não pagou por esses numeros</h3>
-                        <br>
+                        
                         {% for participacao in participacoes %}
                             {% if not participacao.paga %}
                                 <div>
-                                    Participação de {{ participacao.nome_participante }}: <span id="contador-{{ participacao.id }}"></span>
+                                    Os números selecionados estarão disponíveis novamente em:
+                                    <span id="contador-{{ participacao.id }}"></span>
                                 </div>
                             {% endif %}
                         {% endfor %}
@@ -254,13 +274,18 @@
                         <input type="hidden" name="form_type" value="pagamento">
                         <input type="hidden" name="numeros_pagos" id="inputNumerosPagos" value="">
                         
-                        <button data-modal-hide="popup-modal" type="submit" class="text-white bg-green-600 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center">
-                            Comprar agora
-                        </button>
+                        {% if not participacoes_pagas %}
+                            <button data-modal-hide="popup-modal" type="submit" class="text-white bg-green-600 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center">
+                                Comprar agora
+                            </button>
+                        {% endif %}
+
+
+                        <a href="{% url 'detalhe_sorteio' slug=sorteio.slug %}" data-modal-hide="popup-modal" type="button" class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                            Sair
+                        </a>
                     </form>
-                    <a href="{% url "home" %}" data-modal-hide="popup-modal" type="button" class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-                        Sair
-                    </a>
+                    
                 </div>
             </div>
         </div>
