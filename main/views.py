@@ -6,6 +6,9 @@ import json
 
 from django.contrib import messages
 
+from decimal import Decimal
+import re
+
 def home(request):
     sorteios = Sorteio.objects.all()
     return render(request, 'index.html', {'sorteios': sorteios})
@@ -29,7 +32,23 @@ def detalhe_sorteio(request, slug):
     numeros_selecionados = set()
     for participacao in participacoes:
         numeros_selecionados.update(participacao.numeros_selecionados)
-    
+
+    # Modificar a lógica para incluir o nome do participante
+    numeros_reservados_info = {}
+    for participacao in participacoes:
+        for numero in participacao.numeros_selecionados:
+            numeros_reservados_info[numero] = participacao.nome_participante
+
+    # Capturar o número do celular na requisição GET e filtrar os números selecionados
+    numero_celular = request.GET.get('verify-number')
+    if numero_celular:
+        # Certifique-se de que o número do celular está no formato correto
+        numero_celular_formatado = numero_celular
+        participacoes = ParticipacaoSorteio.objects.filter(sorteio=sorteio, celular_participante=numero_celular_formatado)
+        numeros_selecionados = set()
+        for participacao in participacoes:
+            numeros_selecionados.update(participacao.numeros_selecionados)
+        
     # Calcular o número de números livres
     numeros_livres = len(numeros) - len(numeros_selecionados)
 
@@ -72,15 +91,31 @@ def detalhe_sorteio(request, slug):
         'digitos': digitos, 
         'form': form,
         'numeros_selecionados': numeros_selecionados,
-        'numeros_livres': numeros_livres  # Adicionando a variável numeros_livres ao contexto do template
+        'numeros_livres': numeros_livres,  # Adicionando a variável numeros_livres ao contexto do template
+        'numeros_reservados_info': numeros_reservados_info,
     })
 
 def adm(request):
     if request.method == 'POST':
         form = SorteioForm(request.POST, request.FILES)
+
         if form.is_valid():
-            form.save()
+            sorteio = form.save(commit=False)
+
+            # Obter o valor numérico de 'preco'
+            preco_str = request.POST.get('preco')
+            # Remover o 'R$ ' do início e substituir ',' por '.'
+            preco_str = preco_str.replace('R$ ', '').replace(',', '.')
+            # Converter para Decimal
+            preco_decimal = Decimal(preco_str)
+            sorteio.preco = preco_decimal
+
+            sorteio.save()
             return redirect('home')
+        else:
+            print("Erros do formulário:", form.errors)
     else:
         form = SorteioForm()
+
     return render(request, 'admin/adm.html', {'form': form})
+

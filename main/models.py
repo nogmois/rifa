@@ -26,7 +26,7 @@ class Sorteio(models.Model):
 class ParticipacaoSorteio(models.Model):
     sorteio = models.ForeignKey(Sorteio, on_delete=models.CASCADE)
     nome_participante = models.CharField(max_length=200)
-    celular_participante = models.CharField(max_length=20)
+    celular_participante = models.CharField(max_length=20, unique=True)
     numeros_selecionados = ArrayField(models.IntegerField())
 
     def __str__(self):

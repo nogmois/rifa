@@ -5,16 +5,18 @@
 <form class="max-w-sm mx-auto" method="post" enctype="multipart/form-data">
     {% csrf_token %}
     <div class="mb-5">
-        <label for="id_nome" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nome </label>
+        <label for="id_nome" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nome</label>
         <input type="text" name="nome" id="id_nome" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required />
-    </div>
-    <div class="mb-5">
-        <label for="id_preco" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Preço da rifa</label>
-        <input type="number" name="preco" id="id_preco" step="0.01" min="0" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required />
     </div>
     
     <div class="mb-5">
-        <label for="id_numero" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Número</label>
+        <label for="id_preco_visual" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Preço da rifa</label>
+        <input type="text" name="preco_visual" id="id_preco_visual" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required />
+        <input type="hidden" name="preco" id="id_preco_numerico" />
+    </div>
+
+    <div class="mb-5">
+        <label for="id_numero" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Número de rifas</label>
         <input type="number" name="numero" id="id_numero" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required />
     </div>
     
@@ -25,9 +27,45 @@
     
     <div class="mb-5">
         <label for="id_imagem" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Imagem</label>
-        <input type="file" name="imagem" id="id_imagem" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required />
+        <div class="relative">
+            <input type="file" name="imagem" id="id_imagem" class="hidden" accept="image/*" required onchange="handleFileSelect(this)" />
+            <label for="id_imagem" id="imagem-label" class="cursor-pointer flex items-center justify-center bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M13 3a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H8a1 1 0 010-2h3V4a1 1 0 011-1z" clip-rule="evenodd" />
+                    <path fill-rule="evenodd" d="M5 8a1 1 0 011-1h9a1 1 0 110 2H6a1 1 0 01-1-1z" clip-rule="evenodd" />
+                </svg>
+                Selecione uma imagem
+            </label>
+        </div>
     </div>
+    
+    
     <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Cadastrar</button>
 </form>
 
+<script>
+    document.getElementById('id_preco_visual').addEventListener('input', function (e) {
+        var value = e.target.value;
+        var numericValue = value.replace(/\D/g, "");
+        numericValue = (numericValue / 100).toFixed(2);
+        document.getElementById('id_preco_numerico').value = numericValue;
+        value = numericValue.replace(".", ",");
+        value = "R$ " + value;
+        e.target.value = value;
+    });
+</script>
+<script>
+    function handleFileSelect(input) {
+        const label = document.getElementById('imagem-label');
+        if (input.files && input.files[0]) {
+            const fileName = input.files[0].name;
+            label.textContent = fileName + ' selecionada';
+            label.classList.add('bg-green-500', 'text-white');
+        } else {
+            label.textContent = 'Selecione uma imagem';
+            label.classList.remove('bg-green-500', 'text-white');
+        }
+    }
+    </script>
+    
 {% endblock content %}
