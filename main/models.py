@@ -2,6 +2,8 @@ from django.db import models
 from django.utils.text import slugify
 from django.contrib.postgres.fields import ArrayField
 
+from django.utils import timezone
+
 class Sorteio(models.Model):
     nome = models.CharField(max_length=200)
     preco = models.DecimalField(max_digits=10, decimal_places=2)
@@ -26,8 +28,10 @@ class Sorteio(models.Model):
 class ParticipacaoSorteio(models.Model):
     sorteio = models.ForeignKey(Sorteio, on_delete=models.CASCADE)
     nome_participante = models.CharField(max_length=200)
-    celular_participante = models.CharField(max_length=20, unique=True)
+    celular_participante = models.CharField(max_length=20)
     numeros_selecionados = ArrayField(models.IntegerField())
+
+    data_criacao = models.DateTimeField(default=timezone.now)  # Campo para armazenar a data/hora de criação
 
     def __str__(self):
         return f"Participação de {self.nome_participante} no sorteio {self.sorteio.nome}"

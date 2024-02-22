@@ -4,10 +4,12 @@ from .models import Sorteio, ParticipacaoSorteio
 import math
 import json
 
-from django.contrib import messages
+
 
 from decimal import Decimal
-import re
+
+from datetime import timedelta
+from django.utils import timezone
 
 def home(request):
     sorteios = Sorteio.objects.all()
@@ -26,6 +28,23 @@ def detalhe_sorteio(request, slug):
     maior_numero = sorteio.numero
     digitos = int(math.log10(maior_numero)) + 1 if maior_numero else 1
     numeros = list(range(1, maior_numero + 1))
+    
+    # Capturar o número do celular na requisição GET
+    numero_celular = request.GET.get('verify-number')
+
+    # Filtrar as participações com base no número do celular
+    participacoes = ParticipacaoSorteio.objects.filter(sorteio=sorteio, celular_participante=numero_celular)
+
+    # Calcula a hora limite para exclusão (1 hora atrás)
+    hora_limite_exclusao = timezone.now() - timedelta(hours=1)
+    ParticipacaoSorteio.objects.filter(sorteio=sorteio, data_criacao__lte=hora_limite_exclusao).delete()
+
+
+    # Calcula a hora limite para cada participação
+    horas_limites = {}
+    for participacao in participacoes:
+        hora_limite = participacao.data_criacao + timedelta(hours=1)
+        horas_limites[participacao.id] = int(hora_limite.timestamp() * 1000)
 
     # Obter todos os números já selecionados para este sorteio
     participacoes = ParticipacaoSorteio.objects.filter(sorteio=sorteio)
@@ -98,7 +117,14 @@ def detalhe_sorteio(request, slug):
 
         'mostrar_popup_modal': mostrar_popup_modal,
         'numeros_para_modal': json.dumps(list(numeros_selecionados)),
+
+        'horas_limites': horas_limites,
+        'participacoes': participacoes, 
     })
+
+
+
+
 
 def adm(request):
     if request.method == 'POST':
