@@ -41,6 +41,10 @@
         display: block; /* Exibe o tooltip */
     }
 
+    .numero-pago:hover .tooltip-text {
+        display: block; /* Exibe o tooltip */
+    }
+
 </style>
 
 <style>
@@ -137,7 +141,7 @@
 
                 
                 <!-- Botão para números pagos -->
-                <button type="button" class="bg-green-200 text-green-700 px-4 py-2 rounded focus:outline-none focus:ring focus:border-green-300">
+                <button type="button" id="mostrarPagos" class="bg-green-200 text-green-700 px-4 py-2 rounded focus:outline-none focus:ring focus:border-green-300">
                     Pago ({{ numeros_pagos|length }})
                 </button>
             </div>
@@ -163,7 +167,7 @@
             {% if numero in numeros_pagos %}
                 <!-- Número pago -->
                 <div style="margin: 5px; position: relative;" class="bg-green-200 p-2 rounded numero-pago">{{ numero|custom_format:digitos }}
-                    <span class="tooltip-text">Número {{ numero }} pago</span>
+                    <span class="tooltip-text">Número {{ numero }} pago<br> por <span style="color: yellow;" >{{ numeros_reservados_info|get_item:numero }}</span></span>
                 </div>
             {% elif numero in numeros_selecionados %}
                 <div style="margin: 5px; position: relative;" class="bg-blue-200 p-2 rounded numero-reservado">{{ numero|custom_format:digitos }}
@@ -517,6 +521,7 @@
     document.getElementById('mostrarReservados').addEventListener('click', function() {
         var divsReservados = document.querySelectorAll('.numero-reservado');
         var divsNaoReservados = document.querySelectorAll('.numero-nao-reservado');
+        var divsPagas = document.querySelectorAll('.numero-pago');
 
         divsReservados.forEach(function(div) {
             div.style.display = 'block'; // Mostra os números reservados
@@ -525,15 +530,42 @@
         divsNaoReservados.forEach(function(div) {
             div.style.display = 'none'; // Oculta os números não reservados
         });
+
+        divsPagas.forEach(function(div) {
+            div.style.display = 'none'; // Oculta os números Pagos
+        });
     });
 </script>
 
+{% comment %} mostra os numeros Pagos {% endcomment %}
+<script>
+    document.getElementById('mostrarPagos').addEventListener('click', function() {
+        var divsReservados = document.querySelectorAll('.numero-reservado');
+        var divsNaoReservados = document.querySelectorAll('.numero-nao-reservado');
+        var divsPagas = document.querySelectorAll('.numero-pago');
+        
+        divsPagas.forEach(function(div) {
+            div.style.display = 'block'; // Mostra os números reservados
+        });
+
+        divsReservados.forEach(function(div) {
+            div.style.display = 'none'; // Mostra os números reservados
+        });
+
+        divsNaoReservados.forEach(function(div) {
+            div.style.display = 'none'; // Oculta os números não reservados
+        });
+
+    });
+</script>
 
 {% comment %} Mostra só os numeros livres {% endcomment %}
 <script>
     document.getElementById('mostrarLivres').addEventListener('click', function() {
         var divsNaoReservados = document.querySelectorAll('.numero-nao-reservado');
         var divsReservados = document.querySelectorAll('.numero-reservado');
+        var divsPagas = document.querySelectorAll('.numero-pago');
+
 
         divsNaoReservados.forEach(function(div) {
             div.style.display = 'block'; // Mostra os números não reservados (livres)
@@ -541,6 +573,10 @@
 
         divsReservados.forEach(function(div) {
             div.style.display = 'none'; // Oculta os números reservados
+        });
+
+        divsPagas.forEach(function(div) {
+            div.style.display = 'none'; // Oculta os números Pagos
         });
     });
 </script>
@@ -550,6 +586,7 @@
     document.getElementById('mostrarTodos').addEventListener('click', function() {
         var divsNaoReservados = document.querySelectorAll('.numero-nao-reservado');
         var divsReservados = document.querySelectorAll('.numero-reservado');
+        var divsPagas = document.querySelectorAll('.numero-pago');
 
         divsNaoReservados.forEach(function(div) {
             div.style.display = 'block'; // Mostra todos os números não reservados
@@ -557,6 +594,10 @@
 
         divsReservados.forEach(function(div) {
             div.style.display = 'block'; // Mostra todos os números reservados
+        });
+
+        divsPagas.forEach(function(div) {
+            div.style.display = 'block'; // Oculta os números Pagos
         });
     });
 </script>
