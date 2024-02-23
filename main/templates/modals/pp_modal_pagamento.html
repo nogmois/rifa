@@ -1,0 +1,179 @@
+{% load my_filters %}
+<style>
+    .tabs {
+        overflow: hidden;
+        background: #f1f1f1;
+        font-family: Arial, sans-serif;
+    }
+    
+    .tab-button {
+        background-color: inherit;
+        float: left;
+        border: none;
+        outline: none;
+        cursor: pointer;
+        padding: 14px 16px;
+        transition: background-color 0.3s;
+    }
+    
+    .tab-button:hover {
+        background-color: #ddd;
+    }
+    
+    .tab-button.active {
+        background-color: #ccc;
+    }
+    
+    .tab-content {
+        display: none;
+        padding: 6px 12px;
+        border: 1px solid #ccc;
+        border-top: none;
+    }
+
+    
+    
+</style>
+<div id="popup-modal" tabindex="-1"  class="hidden overflow-y-auto overflow-x-hidden shadow-modal fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full" style="display: none!important;">
+    <div class="relative p-4 w-full max-w-md max-h-full">
+        <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
+            <!-- Botão fechar -->
+            
+
+            <div class="p-4 md:p-5 text-center">
+                {% if participacoes_pagas_existem and participacoes_nao_pagas_existem %}
+                    <!-- Abas para Participações Pagas e Não Pagas -->
+                    <div class="tabs">
+                        <button class="tab-button active" onclick="openTab(event, 'Pagas')">Pagas</button>
+                        <button class="tab-button" onclick="openTab(event, 'Selecionadas')">Selecionadas</button>
+                    </div>
+
+                    <!-- Conteúdo da aba 'Pagas' -->
+                    <div id="Pagas" class="tab-content px-5 py-2.5" style="padding-bottom: 12px;">
+                        <!-- SVG para participação paga -->
+                        <svg class="mx-auto mb-4 text-green-400 w-12 h-12 dark:text-gray-200" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                                
+                        <h3 class="mb-2 text-lg font-normal text-gray-500 dark:text-gray-400">Parabens seu numero foi garantido</h3>
+                        <p id="valoresJaPagos"></p>
+                        <br>
+                        <a href="{% url 'detalhe_sorteio' slug=sorteio.slug %}" data-modal-hide="popup-modal" type="button" class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                            Sair
+                        </a>
+                    </div>
+
+                    <!-- Conteúdo da aba 'Selecionadas' -->
+                    <div id="Selecionadas" class="tab-content" style="display:none;">
+                        <!-- SVG para participação não paga -->
+                        <svg class="mx-auto mb-4 text-gray-400 w-12 h-12 dark:text-gray-200" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 11V6m0 8h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                        </svg>
+                        <h3 class="mb-2 text-lg font-normal text-gray-500 dark:text-gray-400">Atenção você ainda não pagou por esses números</h3>
+                        <br>
+                        <p id="valoresNaoPagos"></p>
+                        
+                        <hr>
+                        <br>
+                        Os números selecionados estarão disponíveis novamente em:
+                        <br><br>
+                        <form method="post" action="{% url 'detalhe_sorteio' slug=sorteio.slug %}">
+                            {% csrf_token %}
+                            
+                            {% for participacao in participacoes %}
+                                {% if not participacao.paga %}
+                                    <div>
+                                        <!-- Adicionando números não pagos -->
+                                        <span class="numeros-nao-pagos">Números não pagos {{ numeros_nao_pagos_por_participacao|get_item:participacao.id|default:"Nenhum" }} :</span>
+
+                                        <span id="contador-{{ participacao.id }}"></span>
+                                        <br>
+                                        
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+
+
+                            <br>
+                            <p id="numerosSelecionadosParaExibir" class="mb-5 text-lg font-normal " style="display: none;"></p>
+                            
+                            <input type="hidden" name="form_type" value="pagamento">
+                            <input type="hidden" name="numeros_pagos" id="inputNumerosPagos" value="">
+                            
+                            {% if participacoes_nao_pagas_existem %}
+                                <button data-modal-hide="popup-modal" type="submit" class="text-white bg-green-600 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center">
+                                    Comprar agora
+                                </button>
+                                <a href="{% url 'detalhe_sorteio' slug=sorteio.slug %}" data-modal-hide="popup-modal" type="button" class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                                    Sair
+                                </a>
+                            {% endif %}
+        
+        
+                        </form>
+
+                    </div>
+
+                    
+
+                {% else %}
+
+                {% comment %} Não tem tabs {% endcomment %}
+                {% if participacoes_pagas %}
+                    <!-- Exibe esta mensagem apenas uma vez se houver alguma participação paga -->
+                    <svg class="mx-auto mb-4 text-green-400 w-12 h-12 dark:text-gray-200" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    <h3 class="mb-2 text-lg font-normal text-gray-500 dark:text-gray-400">Parabéns, seu número foi garantido</h3>
+                
+                {% endif %}
+                
+                    {% for participacao in participacoes %}
+                        {% if participacao not in participacoes_pagas %}
+                            <!-- SVG e mensagem para participação não paga -->
+                            <svg class="mx-auto mb-4 text-gray-400 w-12 h-12 dark:text-gray-200" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 11V6m0 8h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                            </svg>
+                            <h3 class="mb-2 text-lg font-normal text-gray-500 dark:text-gray-400">Atenção, você ainda não pagou por esses números</h3>
+                            <br>
+                        {% endif %}
+                    {% endfor %}
+            
+                    <form method="post" action="{% url 'detalhe_sorteio' slug=sorteio.slug %}">
+                        {% csrf_token %}
+                        
+                        {% for participacao in participacoes %}
+                            {% if not participacao.paga %}
+                                <div>
+                                    Os números selecionados estarão disponíveis novamente em:
+                                    <span id="contador-{{ participacao.id }}"></span>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                        <br>
+                        <p id="numerosSelecionadosParaExibir" class="mb-5 text-lg font-normal "></p>
+                        
+                        <input type="hidden" name="form_type" value="pagamento">
+                        <input type="hidden" name="numeros_pagos" id="inputNumerosPagos" value="">
+                        
+                        {% if not participacoes_pagas %}
+                            <button data-modal-hide="popup-modal" type="submit" class="text-white bg-green-600 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center">
+                                Comprar agora
+                            </button>
+                            
+                        {% endif %}
+    
+                        <a href="{% url 'detalhe_sorteio' slug=sorteio.slug %}" data-modal-hide="popup-modal" type="button" class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                            Sair
+                        </a>
+                        
+                    </form>
+                {% endif %}   
+                <br>
+                
+
+            </div>
+        </div>
+    </div>
+</div>
+

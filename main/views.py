@@ -11,6 +11,8 @@ from decimal import Decimal
 from datetime import timedelta
 from django.utils import timezone
 
+from django.http import JsonResponse
+
 def home(request):
     sorteios = Sorteio.objects.all()
     return render(request, 'index.html', {'sorteios': sorteios})
@@ -36,14 +38,14 @@ def detalhe_sorteio(request, slug):
     participacoes = ParticipacaoSorteio.objects.filter(sorteio=sorteio, celular_participante=numero_celular)
 
     # Calcula a hora limite para exclusão (1 hora atrás)
-    hora_limite_exclusao = timezone.now() - timedelta(hours=1)
+    hora_limite_exclusao = timezone.now() - timedelta(hours=6)
     ParticipacaoSorteio.objects.filter(sorteio=sorteio, data_criacao__lte=hora_limite_exclusao, paga=False).delete()
 
 
     # Calcula a hora limite para cada participação
     horas_limites = {}
     for participacao in participacoes:
-        hora_limite = participacao.data_criacao + timedelta(hours=1)
+        hora_limite = participacao.data_criacao + timedelta(hours=72) # 3 dias
         horas_limites[participacao.id] = int(hora_limite.timestamp() * 1000)
 
     # Obter todos os números já selecionados para este sorteio
@@ -68,11 +70,10 @@ def detalhe_sorteio(request, slug):
         for participacao in participacoes:
             numeros_selecionados.update(participacao.numeros_selecionados)
         
+        
     # Calcular o número de números livres
     numeros_livres = len(numeros) - len(numeros_selecionados)
 
-    
-    
 
     # Obter todos os números pagos para este sorteio
     numeros_pagos = set()
@@ -81,6 +82,20 @@ def detalhe_sorteio(request, slug):
         numeros_pagos.update(participacao.numeros_selecionados)
 
     mostrar_popup_modal = 'verify-number' in request.GET
+
+
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        numero_celular = request.GET.get('verify-number')
+        numero_cadastrado = ParticipacaoSorteio.objects.filter(celular_participante=numero_celular).exists()
+        return JsonResponse({'numero_cadastrado': numero_cadastrado})
+    
+
+    # Verificar se tem paga e não paga para colocar a tab no modal
+    participacoes_pagas_existem = any(participacao.paga for participacao in participacoes)
+    participacoes_nao_pagas_existem = any(not participacao.paga for participacao in participacoes)
+
+    
+
     if request.method == 'POST':
         form_type = request.POST.get('form_type', '')
 
@@ -134,6 +149,19 @@ def detalhe_sorteio(request, slug):
     # Muda o icone quando o modal de pagamento aparece
     participacoes_pagas = [participacao for participacao in participacoes if participacao.paga ]
 
+    # Números selecionados e pagos
+    numeros_pago_modal = [participacao.numeros_selecionados for participacao in participacoes if participacao.paga]
+
+    # Números selecionados e não pagos
+    numeros_nao_pagos = [participacao.numeros_selecionados for participacao in participacoes if not participacao.paga]
+
+    # Números selecionados e não pagos especifico
+    numeros_nao_pagos_por_participacao = {participacao.id: participacao.numeros_selecionados for participacao in participacoes if not participacao.paga}
+
+
+    print(f'Numero pago - {numeros_pago_modal}')
+    print(f'Numeros n pagos - {numeros_nao_pagos}')
+
     return render(request, 'sorteios/detalhe_sorteio.html', {
         'sorteio': sorteio, 
         'numeros': numeros, 
@@ -153,6 +181,14 @@ def detalhe_sorteio(request, slug):
         'quanti_numeros_selecionados': quanti_numeros_selecionados,
 
         'participacoes_pagas': participacoes_pagas,
+
+        'participacoes_pagas_existem': participacoes_pagas_existem,
+        'participacoes_nao_pagas_existem': participacoes_nao_pagas_existem,
+
+        'numeros_pago_modal': json.dumps(numeros_pago_modal),
+        'numeros_nao_pagos': json.dumps(numeros_nao_pagos), 
+
+        'numeros_nao_pagos_por_participacao': numeros_nao_pagos_por_participacao,  # Mantenha como um dicionário
     })
 
 

@@ -98,6 +98,30 @@
     
 </style>
 
+<style>
+    .text-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .nome-sorteio {
+        font-size: 1.25rem; /* Aumenta o tamanho da fonte */
+        margin-bottom: 0.5rem; /* Espaçamento abaixo do nome */
+    }
+
+    .descricao-sorteio {
+        font-size: 1rem; /* Tamanho padrão para a descrição */
+        line-height: 1.5; /* Espaçamento entre linhas para melhor legibilidade */
+    }
+
+    .preco-sorteio {
+        font-size: 1.5rem; /* Tamanho maior para o preço */
+        color: #4a5568; /* Cor escura para destaque */
+        margin-top: 1rem; /* Espaçamento acima do preço */
+    }
+</style>
+
 
 <div class="container max-w-3xl mx-auto mt-6 px-8">
     <div class="bg-white rounded-xl shadow-md overflow-hidden">
@@ -109,10 +133,10 @@
             </div>
 
             <!-- Bloco do texto -->
-            <div class="w-1/2 p-8">
-                <div class="uppercase tracking-wide text-sm text-indigo-500 font-semibold">{{ sorteio.nome }}</div>
-                <p class="mt-2 text-gray-500">{{ sorteio.descricao }}</p>
-                <div class="mt-4 text-gray-600 font-bold">R$ {{ sorteio.preco }}</div>
+            <div class="w-1/2 p-8 text-container">
+                <div class="nome-sorteio uppercase tracking-wide text-sm text-indigo-500 font-semibold">{{ sorteio.nome }}</div>
+                <p class="descricao-sorteio mt-2 text-gray-500">{{ sorteio.descricao }}</p>
+                <div class="preco-sorteio mt-4 text-gray-600 font-bold">R$ {{ sorteio.preco }}</div>
             </div>
         </div>
     </div>
@@ -185,195 +209,92 @@
     </div>
 
 
-
-
-  <!-- Modal para Ver meus numeros -->
-  <div id="crud-modal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
-      <div class="relative p-4 w-full max-w-md max-h-full">
-          <!-- Modal content -->
-          <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
-              <!-- Modal header -->
-              <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
-                  <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                      Números Selecionados
-                  </h3>
-                  <button type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" data-modal-toggle="crud-modal">
-                      <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-                          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
-                      </svg>
-                      <span class="sr-only">Close modal</span>
-                  </button>
-              </div>
-              <!-- Modal body -->
-              <form  class="p-4 md:p-5" method="get">
-                  <div class="grid gap-4 mb-4 grid-cols-2">
-                      <div class="col-span-2">
-                          <label for="verify-number" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Numero</label>
-                          <input type="tel" name="verify-number" id="verify-number" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="Digite seu numero" required="">
-                      </div>
-                  </div>
-                  <p id="numberDisplay"></p>
-                  <button id="abrirModalNumeros" type="submit" class="text-white inline-flex items-center bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-                    Ver meus números
-                    </button>
-              </form>
-          </div>
-      </div>
-  </div> 
-
-
     <!-- Modal para comprar os numero -->
+    {% include "modals/pp_modal_pagamento.html" %}
+    
 
-    <div id="popup-modal" tabindex="-1"  class="hidden overflow-y-auto overflow-x-hidden shadow-modal fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full" style="display: none!important;">
-        <div class="relative p-4 w-full max-w-md max-h-full">
-            <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
-                <button type="button" class="absolute top-3 end-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="popup-modal">
-                    <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
-                    </svg>
-                    <span class="sr-only">Close modal</span>
-                </button>
-                <div class="p-4 md:p-5 text-center">
-                    
-                    {% for participacao in participacoes %}
-                        {% if participacao in participacoes_pagas %}
-                            <!-- SVG para participação paga -->
-                            <svg class="mx-auto mb-4 text-green-400 w-12 h-12 dark:text-gray-200" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            
-                            <h3 class="mb-2 text-lg font-normal text-gray-500 dark:text-gray-400">Parabens seu numero foi garantido</h3>
-                           
-                        {% else %}
-                            <!-- SVG para participação não paga -->
-                            <svg class="mx-auto mb-4 text-gray-400 w-12 h-12 dark:text-gray-200" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 11V6m0 8h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                            </svg>
-                            <h3 class="mb-2 text-lg font-normal text-gray-500 dark:text-gray-400">Atenção você ainda não pagou por esses numeros</h3>
-                            <br>
-                        {% endif %}
-                    {% endfor %}
+    <!-- Modal para Ver meus numeros -->
+    {% include "modals/pp_num_select.html" %}
 
 
-
-                    
-                    <form method="post" action="{% url 'detalhe_sorteio' slug=sorteio.slug %}">
-                        {% csrf_token %}
-                        
-                        {% for participacao in participacoes %}
-                            {% if not participacao.paga %}
-                                <div>
-                                    Os números selecionados estarão disponíveis novamente em:
-                                    <span id="contador-{{ participacao.id }}"></span>
-                                </div>
-                            {% endif %}
-                        {% endfor %}
-                        <br>
-                        <p id="numerosSelecionadosParaExibir" class="mb-5 text-lg font-normal "></p>
-                        
-                        <input type="hidden" name="form_type" value="pagamento">
-                        <input type="hidden" name="numeros_pagos" id="inputNumerosPagos" value="">
-                        
-                        {% if not participacoes_pagas %}
-                            <button data-modal-hide="popup-modal" type="submit" class="text-white bg-green-600 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center">
-                                Comprar agora
-                            </button>
-                        {% endif %}
-
-
-                        <a href="{% url 'detalhe_sorteio' slug=sorteio.slug %}" data-modal-hide="popup-modal" type="button" class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-                            Sair
-                        </a>
-                    </form>
-                    
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-  <!-- Main modal para cadastro -->
-  <div id="default-modal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
-      <div class="relative p-4 w-full max-w-2xl max-h-full">
-          <!-- Modal content -->
-          <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
-              <!-- Modal header -->
-              <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
-                  <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
-                      Checkout
-                  </h3>
-                  <button type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="default-modal">
-                      <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-                          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
-                      </svg>
-                      <span class="sr-only">Close modal</span>
-                  </button>
-              </div>
-
-              <!-- Modal body -->
-              <div class="p-4 md:p-5 space-y-4">
-                <form method="post" action="{% url 'detalhe_sorteio' sorteio.slug %}">
-                    {% csrf_token %}
-                    <p class="text-base leading-relaxed text-black dark:text-gray-400">
-                        Pagamento referente à participação na rifa <span style="font-weight: bold; text-transform: uppercase;">{{ sorteio.nome }}</span>
-                    </p>
-                    <p id="numerosSelecionadosText" class="bg-black flex flex-wrap "></p>
-                    
-                    <!-- Campo oculto para armazenar os números selecionados -->
-                    <input type="hidden" name="numeros_selecionados" id="numerosSelecionadosInput">
-            
-                    <input type="hidden" name="form_type" value="participacao">
-
-                    <span id="valorTotalSpan" class="bg-green-100 text-green-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">Total</span>
-                    <p class="text-lg font-semibold uppercase">Dados do participante</p>
-                    
-                    <!-- Campos do formulário -->
-                    <div class="flex flex-col">
-                        <label for="nomeInput" class="text-base leading-relaxed text-black dark:text-gray-400 mb-1">Nome:</label>
-                        <input type="text" name="nome_participante" id="nomeInput" class="bg-white border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Digite seu nome">
-                    </div>
-                    <div class="flex flex-col">
-                        <label for="celularInput" class="text-base leading-relaxed text-black dark:text-gray-400 mb-1">Celular:</label>
-                        <input type="tel" name="celular_participante" id="celularInput" class="bg-white border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="(99) 99999-9999">
-                    </div>                  
-            
-                    <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">Enviar</button>
-                </form>
-            </div>
-            
-
-          </div>
-      </div>
-  </div>
+    <!-- Main modal para cadastro -->
+    {% include "modals/pp_modal_checkout.html" %}
   
 
     <!-- Popup no final da página -->
-    <div id="popfinalizar" class="raffle-selected-numbers bg-white py-3" style="position: fixed; bottom: 0; left: 0; right: 0; display: none;">
-        <div class="container">
-            <div class="row justify-content-between align-items-center">
-                <div class="col-md col-12" id="checkout_ticket_numbers" style="display: flex; flex-wrap: wrap;">
-                    <ul class="p-0 flex flex-wrap" id="selectedNumbersList">
-                        <!-- Cada número selecionado será adicionado como um elemento de lista -->
-                    </ul>
-                </div>
-            
-                <div class="mt-8 flex flex-wrap" id="checkout_text_price_and_button">
-                    <div id="checkout_text_price"></div>
-                    <!-- Botão Finalizar -->
-                    <button id="finalizarButton" data-modal-target="default-modal" data-modal-toggle="default-modal" class="block text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" type="button">
-                        Finalizar
-                    </button>
-                    
-                </div>
-                
-            </div>
-            
-        </div>
-    </div>
+    {% include "modals/pp_final_page.html" %}
 
 
     
 </div>
+
+{% comment  %} Se o numero n existir eu quero que apareça a mensagem vermelha {% endcomment %}
+
+<script>
+    document.getElementById('abrirModalNumeros').addEventListener('click', function(event) {
+        event.preventDefault(); // Previne a submissão padrão do formulário
+    
+        var numero = document.getElementById('verify-number').value;
+        fetch('?verify-number=' + numero, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.numero_cadastrado) {
+                document.getElementById('mensagemNumeroNaoCadastrado').style.display = 'block';
+            } else {
+                // Recarrega a página com um parâmetro adicional para abrir o modal
+                window.location.href = '?verify-number=' + numero + '&show-modal=true';
+            }
+        });
+    });
+    
+</script>
+
+{% comment %} Faz abrir o modal de pagento {% endcomment %}
+<script>
+    window.onload = function() {
+        {% if mostrar_popup_modal %}
+            var numerosSelecionados = {{ numeros_para_modal|safe }};
+            document.getElementById('numerosSelecionadosParaExibir').textContent = 'Números selecionados: ' + numerosSelecionados;
+            document.getElementById('popup-modal').style.display = 'block';
+
+            // Atualiza o valor do campo oculto com os números selecionados
+            document.getElementById('inputNumerosPagos').value = numerosSelecionados.join(',');
+            var numerosPagoModal = {{ numeros_pago_modal|safe }};
+            var numerosNaoPagos = {{ numeros_nao_pagos|safe }};
+            
+            document.getElementById('valoresJaPagos').textContent = 'Números já pagos: ' + numerosPagoModal;
+            document.getElementById('valoresNaoPagos').textContent = 'Números não pagos: ' + numerosNaoPagos;
+    
+            // Garante que a aba 'Pagas' esteja ativa
+            openTab(new Event('click'), 'Pagas');
+        {% endif %}
+    };
+
+    function openTab(evt, tabName) {
+        var i, tabcontent, tabbuttons;
+        tabcontent = document.getElementsByClassName("tab-content");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].style.display = "none";
+        }
+        tabbuttons = document.getElementsByClassName("tab-button");
+        for (i = 0; i < tabbuttons.length; i++) {
+            tabbuttons[i].className = tabbuttons[i].className.replace(" active", "");
+        }
+        document.getElementById(tabName).style.display = "block";
+        evt.currentTarget.className += " active";
+        if (tabName === 'Selecionadas') {
+            atualizarContadores(); // Chama a função de atualização dos contadores
+        }
+        
+    }
+</script>
+
+
 
 {% comment %} Script para confirmar pagamento {% endcomment %}
 <script>
@@ -394,6 +315,12 @@
         var agora = new Date();
 
         for (var id in horasLimites) {
+
+            var elementoContador = document.getElementById("contador-" + id);
+            if (!elementoContador) {
+                continue; // Pula para o próximo se o elemento não existir
+            }
+
             var horaLimite = new Date(horasLimites[id]);
 
             var diferenca = horaLimite - agora;
@@ -403,11 +330,18 @@
                 continue;
             }
 
+            var dias = Math.floor(diferenca / (1000 * 60 * 60 * 24));
             var horas = Math.floor((diferenca % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             var minutos = Math.floor((diferenca % (1000 * 60 * 60)) / (1000 * 60));
             var segundos = Math.floor((diferenca % (1000 * 60)) / 1000);
 
-            document.getElementById("contador-" + id).innerHTML = horas + "h " + minutos + "m " + segundos + "s ";
+            var tempoRestante = "";
+            if (dias > 0) {
+                tempoRestante += dias + "d ";
+            }
+            tempoRestante += horas + "h " + minutos + "m " + segundos + "s";
+
+            document.getElementById("contador-" + id).innerHTML = tempoRestante;
         }
     }
 
@@ -417,20 +351,8 @@
 
 
 
-{% comment %} Faz abrir o modal de pagento {% endcomment %}
-<script>
-    window.onload = function() {
-        {% if mostrar_popup_modal %}
-            var numerosSelecionados = {{ numeros_para_modal|safe }};
-            document.getElementById('numerosSelecionadosParaExibir').textContent = 'Números selecionados: ' + numerosSelecionados;
-            document.getElementById('popup-modal').style.display = 'block';
-        
-            // Atualiza o valor do campo oculto com os números selecionados
-            document.getElementById('inputNumerosPagos').value = numerosSelecionados.join(',');
-        
-        {% endif %}
-    };
-</script>
+
+
 
 
 
