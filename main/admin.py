@@ -7,7 +7,7 @@ class SorteioAdmin(admin.ModelAdmin):
 
 
 class ParticipacaoSorteioAdmin(admin.ModelAdmin):
-    list_display = ('nome_participante', 'celular_participante', 'sorteio')
+    list_display = ('nome_participante', 'celular_participante', 'sorteio', 'numeros_selecionados', 'paga')
     search_fields = ['nome_participante', 'sorteio__nome']
     list_filter = ('sorteio',)
 

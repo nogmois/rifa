@@ -13,6 +13,8 @@ from django.utils import timezone
 
 from django.http import JsonResponse
 
+from django.views.decorators.http import require_POST
+
 def home(request):
     sorteios = Sorteio.objects.all()
     return render(request, 'index.html', {'sorteios': sorteios})
@@ -27,6 +29,7 @@ def sorteio(request):
 
 def detalhe_sorteio(request, slug):
     sorteio = get_object_or_404(Sorteio, slug=slug)
+    form = ParticipacaoSorteioForm()
     maior_numero = sorteio.numero
     digitos = int(math.log10(maior_numero)) + 1 if maior_numero else 1
     numeros = list(range(1, maior_numero + 1))
@@ -102,8 +105,10 @@ def detalhe_sorteio(request, slug):
         if form_type == 'pagamento':
             # Altera para pago no banco de dados
             numeros_pagos_str = request.POST.get('numeros_pagos', '')
-            numeros_pagos = [int(num.strip()) for num in numeros_pagos_str.split(',') if num.strip()]
 
+            print(numeros_pagos_str) 
+            numeros_pagos = [int(num.strip()) for num in numeros_pagos_str.split(',') if num.strip()]
+        
             
             for num in numeros_pagos:
                 ParticipacaoSorteio.objects.filter(sorteio=sorteio, numeros_selecionados__contains=[num]).update(paga=True)
@@ -159,8 +164,6 @@ def detalhe_sorteio(request, slug):
     numeros_nao_pagos_por_participacao = {participacao.id: participacao.numeros_selecionados for participacao in participacoes if not participacao.paga}
 
 
-    print(f'Numero pago - {numeros_pago_modal}')
-    print(f'Numeros n pagos - {numeros_nao_pagos}')
 
     return render(request, 'sorteios/detalhe_sorteio.html', {
         'sorteio': sorteio, 
@@ -193,29 +196,49 @@ def detalhe_sorteio(request, slug):
 
 
 
-
-
-def adm(request):
-    if request.method == 'POST':
-        form = SorteioForm(request.POST, request.FILES)
-
-        if form.is_valid():
-            sorteio = form.save(commit=False)
-
-            # Obter o valor numérico de 'preco'
-            preco_str = request.POST.get('preco')
-            # Remover o 'R$ ' do início e substituir ',' por '.'
-            preco_str = preco_str.replace('R$ ', '').replace(',', '.')
-            # Converter para Decimal
-            preco_decimal = Decimal(preco_str)
-            sorteio.preco = preco_decimal
-
-            sorteio.save()
-            return redirect('home')
+def adm(request, slug=None):
+    sorteio = None
+    if slug:
+        # Acessando um sorteio existente para atualizar
+        sorteio = get_object_or_404(Sorteio, slug=slug)
+        if request.method == 'POST':
+            # Atualizar o sorteio existente
+            form = SorteioForm(request.POST, request.FILES, instance=sorteio)
+            if form.is_valid():
+                form.save()
+                return redirect('home')
+            else:
+                print("Erros do formulário na atualização:", form.errors)
         else:
-            print("Erros do formulário:", form.errors)
+            # Abrir formulário com dados do sorteio para edição
+            form = SorteioForm(instance=sorteio)
     else:
-        form = SorteioForm()
+        # Criar um novo sorteio
+        if request.method == 'POST':
+            form = SorteioForm(request.POST, request.FILES)
+            if form.is_valid():
+                novo_sorteio = form.save(commit=False)
 
-    return render(request, 'admin/adm.html', {'form': form})
+                # Obter e processar o valor do preço
+                preco_str = request.POST.get('preco', '')
+                preco_str = preco_str.replace('R$ ', '').replace(',', '.')
+                preco_decimal = Decimal(preco_str)
+                novo_sorteio.preco = preco_decimal
 
+                novo_sorteio.save()
+                return redirect('home')
+            else:
+                print("Erros do formulário na criação:", form.errors)
+        else:
+            form = SorteioForm()
+
+    sorteios = Sorteio.objects.all() 
+    return render(request, 'admin/adm.html', {'form': form, 'sorteios': sorteios, 'sorteio': sorteio})
+
+
+
+@require_POST  # Garante que esta view só possa ser acessada via POST
+def excluir_sorteio(request, slug):
+    sorteio = get_object_or_404(Sorteio, slug=slug)
+    sorteio.delete()
+    return redirect('adm')

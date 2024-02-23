@@ -6,29 +6,29 @@
     {% csrf_token %}
     <div class="mb-5">
         <label for="id_nome" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nome</label>
-        <input type="text" name="nome" id="id_nome" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required />
+        <input type="text" name="nome" id="id_nome" value="{{ sorteio.nome|default:'' }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required />
     </div>
-    
+
     <div class="mb-5">
         <label for="id_preco_visual" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Preço da rifa</label>
-        <input type="text" name="preco_visual" id="id_preco_visual" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required />
-        <input type="hidden" name="preco" id="id_preco_numerico" />
+        <input type="text" name="preco_visual" id="id_preco_visual" value="{{ sorteio.preco|default:'' }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required />
+        <input type="hidden" name="preco" id="id_preco_numerico" value="{{ sorteio.preco|default:'' }}" />
     </div>
 
     <div class="mb-5">
         <label for="id_numero" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Número de rifas</label>
-        <input type="number" name="numero" id="id_numero" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required />
+        <input type="number" name="numero" id="id_numero" value="{{ sorteio.numero|default:'' }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required />
     </div>
-    
+
     <div class="mb-5">
         <label for="id_descricao" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Descrição</label>
-        <textarea name="descricao" id="id_descricao" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
+        <textarea name="descricao" id="id_descricao" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">{{ sorteio.descricao|default:'' }}</textarea>
     </div>
-    
+
     <div class="mb-5">
         <label for="id_imagem" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Imagem</label>
         <div class="relative">
-            <input type="file" name="imagem" id="id_imagem" class="hidden" accept="image/*" required onchange="handleFileSelect(this)" />
+            <input type="file" name="imagem" id="id_imagem" class="hidden" accept="image/*" onchange="handleFileSelect(this)" />
             <label for="id_imagem" id="imagem-label" class="cursor-pointer flex items-center justify-center bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M13 3a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H8a1 1 0 010-2h3V4a1 1 0 011-1z" clip-rule="evenodd" />
@@ -37,11 +37,45 @@
                 Selecione uma imagem
             </label>
         </div>
+        {% if sorteio.imagem %}
+            <img src="{{ sorteio.imagem.url }}" alt="Imagem do sorteio" style="max-width: 100px; max-height: 100px;" />
+        {% endif %}
     </div>
     
-    
-    <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Cadastrar</button>
+    <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+        {% if sorteio %}Atualizar{% else %}Cadastrar{% endif %}
+    </button>
 </form>
+<!-- Adicionando a lista de sorteios existentes -->
+<div class="relative overflow-x-auto mt-4">
+    <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+            <tr>
+                <th scope="col" class="px-6 py-3">Nome do Sorteio</th>
+                <th scope="col" class="px-6 py-3">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sorteio in sorteios %}
+            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                <td scope="row" class="px-6 py-4 font-medium text-gray-900 dark:text-white">{{ sorteio.nome }}</td>
+                <td class="px-6 py-4">
+                    <a href="{% url 'adm' sorteio.slug %}" class="text-blue-600 hover:underline">Atualizar</a> |
+                    <form action="{% url 'excluir_sorteio' sorteio.slug %}" method="post" onsubmit="return confirm('Tem certeza que deseja excluir este sorteio?');" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="text-red-600 hover:underline">Excluir</button>
+                    </form>
+                </td>
+            </tr>
+            {% empty %}
+            <tr class="bg-white dark:bg-gray-800">
+                <td colspan="2" class="px-6 py-4">Nenhum sorteio encontrado.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
 
 <script>
     document.getElementById('id_preco_visual').addEventListener('input', function (e) {

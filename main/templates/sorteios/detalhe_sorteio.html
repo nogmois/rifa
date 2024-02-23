@@ -302,7 +302,6 @@
         document.getElementById('inputNumerosPagos').value = numerosSelecionados.join(',');
     }
 
-    document.querySelector('[data-modal-hide="popup-modal"]').addEventListener('click', atualizarInputNumerosPagos);
 </script>
 
 
@@ -317,9 +316,9 @@
         for (var id in horasLimites) {
 
             var elementoContador = document.getElementById("contador-" + id);
-            if (!elementoContador) {
-                continue; // Pula para o próximo se o elemento não existir
-            }
+        if (!elementoContador) {
+            continue; // Pula para o próximo se o elemento não existir
+        }
 
             var horaLimite = new Date(horasLimites[id]);
 
