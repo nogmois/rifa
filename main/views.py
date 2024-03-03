@@ -3,17 +3,20 @@ from .forms import SorteioForm, ParticipacaoSorteioForm
 from .models import Sorteio, ParticipacaoSorteio
 import math
 import json
+from datetime import datetime, timedelta
+from django.views.decorators.csrf import csrf_exempt
 
-
-
+from django.views.decorators.http import require_http_methods
 from decimal import Decimal
 
 from datetime import timedelta
 from django.utils import timezone
 
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseBadRequest
 
 from django.views.decorators.http import require_POST
+
+from .utils import send_sms_via_textbelt, format_number_for_sms
 
 def home(request):
     sorteios = Sorteio.objects.all()
@@ -109,6 +112,12 @@ def detalhe_sorteio(request, slug):
             print(numeros_pagos_str) 
             numeros_pagos = [int(num.strip()) for num in numeros_pagos_str.split(',') if num.strip()]
         
+            # Enviar SMS após o pagamento
+            celular_participante = request.POST.get('celular_participante')
+            if celular_participante:
+                celular_participante_formatado = format_number_for_sms(celular_participante)
+                mensagem_pagamento = "Obrigado por efetuar o pagamento."
+                send_sms_via_textbelt(celular_participante_formatado, mensagem_pagamento)
             
             for num in numeros_pagos:
                 ParticipacaoSorteio.objects.filter(sorteio=sorteio, numeros_selecionados__contains=[num]).update(paga=True)
@@ -134,7 +143,16 @@ def detalhe_sorteio(request, slug):
                 nome_participante = request.POST.get('nome_participante')
                 celular_participante = request.POST.get('celular_participante')
 
+                # Enviar SMS após a participação
+                celular_participante = participacao.celular_participante
+                nome_participante = participacao.nome_participante
+                mensagem_participacao = f"Parabéns, {nome_participante}, por escolher seus números. Acesse o site para efetuar o pagamento."
+                celular_participante_formatado = format_number_for_sms(celular_participante)
+                send_sms_via_textbelt(celular_participante_formatado, mensagem_participacao)
+
+
                 try:
+
                     participacao.numeros_selecionados = numeros_selecionados_int
                     participacao.nome_participante = nome_participante
                     participacao.celular_participante = celular_participante
@@ -232,8 +250,9 @@ def adm(request, slug=None):
         else:
             form = SorteioForm()
 
+    participacoes = ParticipacaoSorteio.objects.filter(paga=False)
     sorteios = Sorteio.objects.all() 
-    return render(request, 'admin/adm.html', {'form': form, 'sorteios': sorteios, 'sorteio': sorteio})
+    return render(request, 'admin/adm.html', {'form': form, 'sorteios': sorteios, 'sorteio': sorteio, 'participacoes': participacoes})
 
 
 
@@ -242,3 +261,61 @@ def excluir_sorteio(request, slug):
     sorteio = get_object_or_404(Sorteio, slug=slug)
     sorteio.delete()
     return redirect('adm')
+
+
+def calcular_tempo_restante(data_criacao):
+    prazo_final = data_criacao + timedelta(days=3)  # 3 dias a partir da data de criação
+    agora = datetime.now(data_criacao.tzinfo)  # Certifique-se de usar o mesmo fuso horário
+    diferenca = prazo_final - agora
+    if diferenca.total_seconds() <= 0:
+        return "EXPIRADO"
+    dias, resto = divmod(diferenca.seconds, 86400)
+    horas, resto = divmod(resto, 3600)
+    minutos, segundos = divmod(resto, 60)
+    return f"{dias}d {horas}h {minutos}m {segundos}s"
+
+def participantes_json(request):
+    participacoes = ParticipacaoSorteio.objects.filter(paga=False)
+    dados = [
+        {
+            'id': participacao.id,
+            'nome_participante': participacao.nome_participante,
+            'sorteio': {
+                'nome': participacao.sorteio.nome,
+                'slug': participacao.sorteio.slug
+            },
+            'tempo_restante': calcular_tempo_restante(participacao.data_criacao)
+        }
+        for participacao in participacoes
+    ]
+    return JsonResponse(dados, safe=False)
+
+
+@require_http_methods(["POST"])
+def alterar_horas(request, participacao_id):
+    try:
+        body = json.loads(request.body)
+        horas = int(body.get('horas'))
+        participacao = ParticipacaoSorteio.objects.get(id=participacao_id)
+        
+        # Convertendo o tempo do banco de dados para o fuso horário local
+        participacao.data_criacao = participacao.data_criacao.astimezone(timezone.get_current_timezone())
+        
+        # Adicionando as horas
+        participacao.data_criacao += timedelta(hours=horas)
+        
+        participacao.save()
+        return JsonResponse({"status": "sucesso", "mensagem": "Horas atualizadas"})
+    except ParticipacaoSorteio.DoesNotExist:
+        return HttpResponseBadRequest("Participação não encontrada")
+    except (ValueError, KeyError):
+        return HttpResponseBadRequest("Dados inválidos")
+
+
+""" ENVIO DE SMS """
+
+def send_test_sms(request):
+    # Aqui você pode usar a função format_number_for_sms se necessário
+    formatted_number = format_number_for_sms('(123) 456-7890')
+    result = send_sms_via_textbelt(formatted_number, 'Olá, este é um teste de SMS do Django!')
+    return JsonResponse(result)

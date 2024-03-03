@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load add_timer %}
 
 {% block content %}
 
@@ -76,6 +77,187 @@
     </table>
 </div>
 
+<!-- Lista de participantes e seus timers -->
+<div class="mt-4">
+    <h2 class="text-lg font-bold mb-2">Participantes e Timers</h2>
+    <div class="overflow-x-auto">
+        <table class="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
+            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                <tr>
+                    <th scope="col" class="px-6 py-3">Nome do Participante</th>
+                    <th scope="col" class="px-6 py-3">Sorteio</th>
+                    <th scope="col" class="px-6 py-3">Timer</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for participacao in participacoes %}
+                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                        <td class="px-6 py-4">{{ participacao.nome_participante }}</td>
+                        <td class="px-6 py-4">{{ participacao.sorteio.nome }}</td>
+                        <td id="contador-{{ participacao.id }}" class="px-6 py-4">
+                            {{ participacao.tempo_restante }}
+                        </td>
+                        
+                        
+                        
+                        <td>
+                            <div class="flex items-center">
+                                <button class="px-2 py-1 text-sm text-white bg-green-500 hover:bg-green-600" onclick="alterarHoras({{ participacao.id }}, 1); location.reload();">+</button>
+                                <!-- Ajuste a largura aqui -->
+                                <input type="number" id="horas-{{ participacao.id }}" class="mx-2 border rounded text-center w-20" value="0">
+                                <button class="px-2 py-1 text-sm text-white bg-red-500 hover:bg-red-600" onclick="alterarHoras({{ participacao.id }}, -1); location.reload();">-</button>
+                            </div>
+                            
+                        </td>
+                        
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="3" class="px-6 py-4">Nenhum participante encontrado.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+
+        // Função para criar um elemento HTML para cada participante
+        function criarElementoParticipante(participacao) {
+            const div = document.createElement('div');
+            div.innerHTML = `
+                <p><strong>Nome:</strong> ${participacao.nome_participante}</p>
+                <p><strong>Sorteio:</strong> ${participacao.sorteio.nome}</p>
+                <p><strong>Timer:</strong> ${participacao.tempo_restante}</p>
+            `;
+            return div;
+        }
+
+        // Função para atualizar a lista de participantes
+        function atualizarParticipantes() {
+            fetch('participantes-json/') // Certifique-se de que o caminho está correto
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Falha ao buscar dados');
+                    }
+                    return response.json();
+                })
+                .then(dados => {
+                    const container = document.getElementById('participantes-container');
+                    container.innerHTML = ''; // Limpar conteúdo existente
+                    dados.forEach(participacao => {
+                        const elemento = criarElementoParticipante(participacao);
+                        container.appendChild(elemento);
+                    });
+                })
+                .catch(error => {
+                    console.error('Erro ao atualizar participantes:', error);
+                });
+        }
+
+        // Chamar atualizarParticipantes para carregar os dados inicialmente
+        atualizarParticipantes();
+    });
+</script>
+
+<script>
+    var horasLimites = {
+        {% for participacao in participacoes %}
+        "{{ participacao.id }}": new Date("{{ participacao.data_criacao|date:'Y-m-d H:i:s' }}").getTime() + (3 * 24 * 60 * 60 * 1000), // Adiciona 3 dias
+        {% endfor %}
+    };
+
+    function atualizarContadores() {
+        var agora = new Date().getTime();
+    
+        for (var id in horasLimites) {
+            var elementoContador = document.getElementById("contador-" + id);
+            if (!elementoContador) {
+                continue;
+            }
+    
+            var horaLimite = horasLimites[id] - (3 * 60 * 60 * 1000); // Subtrai 2 horas
+            var diferenca = horaLimite - agora;
+    
+            if (diferenca < 0) {
+                elementoContador.innerHTML = "EXPIRADO";
+                continue;
+            }
+    
+            // Cálculo de dias, horas, minutos e segundos
+            var dias = Math.floor(diferenca / (1000 * 60 * 60 * 24));
+            var horas = Math.floor((diferenca % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            var minutos = Math.floor((diferenca % (1000 * 60 * 60)) / (1000 * 60));
+            var segundos = Math.floor((diferenca % (1000 * 60)) / 1000);
+    
+            elementoContador.innerHTML = (dias > 0 ? dias + "d " : "") + horas + "h " + minutos + "m " + segundos + "s";
+        }
+    }
+    
+    setInterval(atualizarContadores, 1000);
+    atualizarContadores();
+</script>
+
+
+
+
+<script>
+    function alterarHoras(participacaoId, incremento) {
+        var horasInput = document.getElementById('horas-' + participacaoId);
+        var horas = parseInt(horasInput.value, 10) * incremento;
+        var csrftoken = getCookie('csrftoken');
+        
+        fetch('/alterar-horas/' + participacaoId + '/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ horas: horas })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Falha ao alterar horas');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Atualize o valor de horasLimites
+            var horasAdicionadas = parseInt(horasInput.value, 10) * incremento;
+            // Ajuste de tempo para o fuso horário do servidor
+            var agora = new Date();
+            agora.setHours(agora.getHours() - 3); // Leva em consideração a diferença de 3 horas
+            horasLimites[participacaoId] = new Date(horasLimites[participacaoId].getTime() + horasAdicionadas * 60 * 60 * 1000);
+            
+            // Atualizar o contador
+            atualizarContadores();
+        })
+        
+        .catch(error => {
+            console.error('Erro ao alterar horas:', error);
+        });
+    }
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+</script>
 
 <script>
     document.getElementById('id_preco_visual').addEventListener('input', function (e) {
