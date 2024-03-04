@@ -17,5 +17,5 @@ urlpatterns = [
     path('alterar-horas/<int:participacao_id>/', alterar_horas, name='alterar_horas'),
 
     # sms
-    path('send-sms/', send_test_sms, name='send_test_sms'),
+    #path('send-sms/', send_test_sms, name='send_test_sms'),
 ]
