@@ -16,7 +16,7 @@ from django.http import JsonResponse, HttpResponseBadRequest
 
 from django.views.decorators.http import require_POST
 
-from .utils import send_sms_via_textbelt, format_number_for_sms
+
 
 def home(request):
     sorteios = Sorteio.objects.all()
