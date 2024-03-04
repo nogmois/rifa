@@ -297,20 +297,19 @@ def alterar_horas(request, participacao_id):
         body = json.loads(request.body)
         horas = int(body.get('horas'))
         participacao = ParticipacaoSorteio.objects.get(id=participacao_id)
-        
-        # Convertendo o tempo do banco de dados para o fuso horário local
-        participacao.data_criacao = participacao.data_criacao.astimezone(timezone.get_current_timezone())
-        
-        # Adicionando as horas
-        participacao.data_criacao += timedelta(hours=horas)
-        
+
+        nova_data_criacao = participacao.data_criacao + timedelta(hours=horas)
+        if nova_data_criacao < timezone.now():
+            return JsonResponse({"status": "erro", "mensagem": "Não é possível definir uma hora no passado"})
+
+        participacao.data_criacao = nova_data_criacao
         participacao.save()
         return JsonResponse({"status": "sucesso", "mensagem": "Horas atualizadas"})
+
     except ParticipacaoSorteio.DoesNotExist:
         return HttpResponseBadRequest("Participação não encontrada")
     except (ValueError, KeyError):
         return HttpResponseBadRequest("Dados inválidos")
-
 
 """ ENVIO DE SMS """
 

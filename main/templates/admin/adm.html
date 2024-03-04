@@ -95,7 +95,7 @@
                         <td class="px-6 py-4">{{ participacao.nome_participante }}</td>
                         <td class="px-6 py-4">{{ participacao.sorteio.nome }}</td>
                         <td id="contador-{{ participacao.id }}" class="px-6 py-4">
-                            {{ participacao.tempo_restante }}
+                            {{ participacao.data_criacao|calcular_tempo_restante }}
                         </td>
                         
                         
@@ -209,16 +209,17 @@
 <script>
     function alterarHoras(participacaoId, incremento) {
         var horasInput = document.getElementById('horas-' + participacaoId);
-        var horas = parseInt(horasInput.value, 10) * incremento;
+        var incrementoHoras = parseInt(horasInput.value, 10) * incremento;
+    
         var csrftoken = getCookie('csrftoken');
-        
+    
         fetch('/alterar-horas/' + participacaoId + '/', {
             method: 'POST',
             headers: {
                 'X-CSRFToken': csrftoken,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ horas: horas })
+            body: JSON.stringify({ horas: incrementoHoras })
         })
         .then(response => {
             if (!response.ok) {
@@ -227,21 +228,23 @@
             return response.json();
         })
         .then(data => {
-            // Atualize o valor de horasLimites
-            var horasAdicionadas = parseInt(horasInput.value, 10) * incremento;
-            // Ajuste de tempo para o fuso horário do servidor
-            var agora = new Date();
-            agora.setHours(agora.getHours() - 3); // Leva em consideração a diferença de 3 horas
-            horasLimites[participacaoId] = new Date(horasLimites[participacaoId].getTime() + horasAdicionadas * 60 * 60 * 1000);
-            
-            // Atualizar o contador
-            atualizarContadores();
+            if (data.status === "sucesso") {
+                // Atualiza o contador no front-end com a nova data de expiração
+                var novaDataCriacao = new Date(horasLimites[participacaoId]);
+                novaDataCriacao.setHours(novaDataCriacao.getHours() + incrementoHoras);
+                horasLimites[participacaoId] = novaDataCriacao.getTime();
+                atualizarContadores();
+            } else {
+                alert(data.mensagem);
+            }
         })
-        
         .catch(error => {
             console.error('Erro ao alterar horas:', error);
         });
     }
+    
+    
+
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {

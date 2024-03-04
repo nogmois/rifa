@@ -140,5 +140,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
+# Cadastrar a API:
+# https://textbelt.com/
 TEXTBELT_API_KEY = config('TEXTBELT_API_KEY')
