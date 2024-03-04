@@ -117,7 +117,7 @@ def detalhe_sorteio(request, slug):
             if celular_participante:
                 celular_participante_formatado = format_number_for_sms(celular_participante)
                 mensagem_pagamento = "Obrigado por efetuar o pagamento."
-                send_sms_via_textbelt(celular_participante_formatado, mensagem_pagamento)
+                #send_sms_via_textbelt(celular_participante_formatado, mensagem_pagamento)
             
             for num in numeros_pagos:
                 ParticipacaoSorteio.objects.filter(sorteio=sorteio, numeros_selecionados__contains=[num]).update(paga=True)
@@ -148,7 +148,7 @@ def detalhe_sorteio(request, slug):
                 nome_participante = participacao.nome_participante
                 mensagem_participacao = f"Parabéns, {nome_participante}, por escolher seus números. Acesse o site para efetuar o pagamento."
                 celular_participante_formatado = format_number_for_sms(celular_participante)
-                send_sms_via_textbelt(celular_participante_formatado, mensagem_participacao)
+                #send_sms_via_textbelt(celular_participante_formatado, mensagem_participacao)
 
 
                 try:
