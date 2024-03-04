@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import home, sorteio, adm, detalhe_sorteio, excluir_sorteio, participantes_json, alterar_horas, send_test_sms
+from .views import home, sorteio, adm, detalhe_sorteio, excluir_sorteio, participantes_json, alterar_horas
 
 
 
