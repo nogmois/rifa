@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import home, sorteio, adm, detalhe_sorteio, excluir_sorteio, participantes_json, alterar_horas
+from .views import home, sorteio, adm, detalhe_sorteio, excluir_sorteio, participantes_json, alterar_horas, payment_process
 
 
 
@@ -18,4 +18,5 @@ urlpatterns = [
 
     # sms
     #path('send-sms/', send_test_sms, name='send_test_sms'),
-]
+    path('payment/', payment_process, name='payment_process'),
+]   

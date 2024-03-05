@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Sorteio, ParticipacaoSorteio
+from .models import Sorteio, ParticipacaoSorteio, TextbeltApiKey, StripeConfig
 
 @admin.register(Sorteio)
 class SorteioAdmin(admin.ModelAdmin):
@@ -13,3 +13,15 @@ class ParticipacaoSorteioAdmin(admin.ModelAdmin):
 
 # Registro do Modelo no Admin
 admin.site.register(ParticipacaoSorteio, ParticipacaoSorteioAdmin)
+
+
+class TextbeltApiKeyAdmin(admin.ModelAdmin):
+    list_display = ('chave', 'descricao')
+    search_fields = ('chave', 'descricao')
+
+admin.site.register(TextbeltApiKey)
+
+
+@admin.register(StripeConfig)
+class StripeConfigAdmin(admin.ModelAdmin):
+    list_display = ('public_key',)

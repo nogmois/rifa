@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+<!-- Template HTML -->
+<form id="payment-form">
+    <div id="card-element">
+      <!-- Elementos do Stripe irão aqui -->
+    </div>
+    <button type="submit" id="submit">Pagar</button>
+    <p id="error-message"></p>
+</form>
+
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+    var stripe = Stripe('{{ STRIPE_PUBLIC_KEY }}');
+    var elements = stripe.elements();
+    var card = elements.create('card');
+    card.mount('#card-element');
+
+    var form = document.getElementById('payment-form');
+    form.addEventListener('submit', function(event) {
+        event.preventDefault();
+        stripe.confirmCardPayment('{{ clientSecret }}', {
+            payment_method: {
+                card: card,
+            }
+        }).then(function(result) {
+            if (result.error) {
+                // Mostrar erro no cliente
+                console.log(result.error.message);
+            } else {
+                // Pagamento foi processado com sucesso
+                console.log('Pagamento efetuado!');
+            }
+        });
+    });
+</script>
+
+
+{% endblock content %}
+
+

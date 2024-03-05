@@ -38,3 +38,18 @@ class ParticipacaoSorteio(models.Model):
     def __str__(self):
         return f"Participação de {self.nome_participante} no sorteio {self.sorteio.nome}"
 
+
+class TextbeltApiKey(models.Model):
+    chave = models.CharField(max_length=200)
+    descricao = models.CharField(max_length=200, blank=True)
+
+    def __str__(self):
+        return f"Textbelt API Key: {self.descricao or self.chave[:10]}..."
+
+        
+class StripeConfig(models.Model):
+    public_key = models.CharField(max_length=200, verbose_name="Stripe Public Key")
+    secret_key = models.CharField(max_length=200, verbose_name="Stripe Secret Key")
+
+    def __str__(self):
+        return "Configurações do Stripe"

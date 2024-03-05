@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .forms import SorteioForm, ParticipacaoSorteioForm
-from .models import Sorteio, ParticipacaoSorteio
+from .forms import SorteioForm, ParticipacaoSorteioForm, TextbeltApiKeyForm
+from .models import Sorteio, ParticipacaoSorteio, TextbeltApiKey, StripeConfig
 import math
 import json
 from datetime import datetime, timedelta
@@ -16,6 +16,9 @@ from django.http import JsonResponse, HttpResponseBadRequest
 
 from django.views.decorators.http import require_POST
 
+from django.contrib.auth.decorators import login_required
+import requests
+import stripe
 
 
 def home(request):
@@ -201,46 +204,44 @@ def detalhe_sorteio(request, slug):
     })
 
 
-
+@login_required
 def adm(request, slug=None):
     sorteio = None
+    form = SorteioForm()
+    api_key_form = TextbeltApiKeyForm()
+    
     if slug:
-        # Acessando um sorteio existente para atualizar
         sorteio = get_object_or_404(Sorteio, slug=slug)
-        if request.method == 'POST':
-            # Atualizar o sorteio existente
+        form = SorteioForm(instance=sorteio)
+
+    if request.method == 'POST':
+        post_type = request.POST.get('post_type')
+
+        if post_type == 'sorteio':
             form = SorteioForm(request.POST, request.FILES, instance=sorteio)
             if form.is_valid():
                 form.save()
                 return redirect('home')
             else:
                 print("Erros do formulário na atualização:", form.errors)
-        else:
-            # Abrir formulário com dados do sorteio para edição
-            form = SorteioForm(instance=sorteio)
-    else:
-        # Criar um novo sorteio
-        if request.method == 'POST':
-            form = SorteioForm(request.POST, request.FILES)
-            if form.is_valid():
-                novo_sorteio = form.save(commit=False)
-
-                # Obter e processar o valor do preço
-                preco_str = request.POST.get('preco', '')
-                preco_str = preco_str.replace('R$ ', '').replace(',', '.')
-                preco_decimal = Decimal(preco_str)
-                novo_sorteio.preco = preco_decimal
-
-                novo_sorteio.save()
+            
+        elif post_type == 'textbelt_api_key':
+            api_key_form = TextbeltApiKeyForm(request.POST)
+            if api_key_form.is_valid():
+                chave = api_key_form.cleaned_data.get('chave')
+                TextbeltApiKey.objects.update_or_create(defaults={'chave': chave})
                 return redirect('home')
-            else:
-                print("Erros do formulário na criação:", form.errors)
-        else:
-            form = SorteioForm()
 
     participacoes = ParticipacaoSorteio.objects.filter(paga=False)
-    sorteios = Sorteio.objects.all() 
-    return render(request, 'admin/adm.html', {'form': form, 'sorteios': sorteios, 'sorteio': sorteio, 'participacoes': participacoes})
+    sorteios = Sorteio.objects.all()
+    
+    return render(request, 'admin/adm.html', {
+        'form': form,
+        'api_key_form': api_key_form,
+        'sorteios': sorteios, 
+        'sorteio': sorteio, 
+        'participacoes': participacoes,
+    })
 
 
 
@@ -298,3 +299,54 @@ def alterar_horas(request, participacao_id):
         return HttpResponseBadRequest("Participação não encontrada")
     except (ValueError, KeyError):
         return HttpResponseBadRequest("Dados inválidos")
+
+
+def get_textbelt_api_key():
+    try:
+        return TextbeltApiKey.objects.first().chave
+    except AttributeError:
+        return None
+
+def enviar_mensagem_textbelt(destinatario, mensagem):
+    chave_api = get_textbelt_api_key()
+    if not chave_api:
+        raise ValueError("Chave da API do Textbelt não encontrada.")
+
+    data = {
+        'phone': destinatario,
+        'message': mensagem,
+        'key': chave_api,
+    }
+
+    response = requests.post('https://textbelt.com/text', data=data)
+    return response.json()
+
+
+def get_stripe_keys():
+    config = StripeConfig.objects.first()
+    if config:
+        return config.public_key, config.secret_key
+    return None, None
+
+
+def payment_process(request):
+    # Obter as chaves do Stripe
+    public_key, secret_key = get_stripe_keys()
+
+    if not public_key or not secret_key:
+        # Tratar o caso em que as chaves não estão configuradas
+        return JsonResponse({'error': 'Chaves do Stripe não configuradas.'})
+
+    stripe.api_key = secret_key
+
+    if request.method == 'POST':
+        # Cria um PaymentIntent com o valor e a moeda
+        intent = stripe.PaymentIntent.create(
+            amount=1000,  # Valor em centavos
+            currency='usd',
+            # Adicionar mais opções aqui se necessário
+        )
+        return JsonResponse({'clientSecret': intent.client_secret})
+    else:
+        # Renderizar a página com o formulário de pagamento
+        return render(request, 'payment.html', {'STRIPE_PUBLIC_KEY': public_key})

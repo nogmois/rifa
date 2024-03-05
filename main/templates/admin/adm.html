@@ -5,6 +5,7 @@
 
 <form class="max-w-sm mx-auto" method="post" enctype="multipart/form-data">
     {% csrf_token %}
+    <input type="hidden" name="post_type" value="sorteio">
     <div class="mb-5">
         <label for="id_nome" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nome</label>
         <input type="text" name="nome" id="id_nome" value="{{ sorteio.nome|default:'' }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required />
@@ -47,6 +48,21 @@
         {% if sorteio %}Atualizar{% else %}Cadastrar{% endif %}
     </button>
 </form>
+
+<form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="post_type" value="textbelt_api_key">
+
+    <div class="mb-5">
+        <label for="id_api_key" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Chave da API do Textbelt</label>
+        <input type="text" name="chave" id="id_api_key" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required />
+    </div>
+    
+    <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+        Salvar Chave da API
+    </button>
+</form>
+
 <!-- Adicionando a lista de sorteios existentes -->
 <div class="relative overflow-x-auto mt-4">
     <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
